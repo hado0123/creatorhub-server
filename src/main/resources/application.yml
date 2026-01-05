@@ -43,3 +43,7 @@ server:
 jwt:
   access-token-exp-min: 30
   refresh-token-exp-days: 7
+
+cloud:
+  aws:
+    region: ap-northeast-2

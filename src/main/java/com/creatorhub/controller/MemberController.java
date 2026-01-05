@@ -20,8 +20,8 @@ public class MemberController {
      * 회원가입
      */
     @PostMapping("/signup")
-    public ResponseEntity<MemberResponse> signup(@Valid @RequestBody MemberRequest memberRequest) {
-        MemberResponse memberResponse = memberService.signup(memberRequest);
+    public ResponseEntity<MemberResponse> signup(@Valid @RequestBody MemberRequest req) {
+        MemberResponse memberResponse = memberService.signup(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(memberResponse);
     }
 }

@@ -35,6 +35,25 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Creator 관련 예외 처리
+     */
+    @ExceptionHandler(CreatorException.class)
+    public ResponseEntity<ErrorResponse> handleCreatorException(
+            CreatorException ex,
+            HttpServletRequest request) {
+
+        log.warn("CreatorException occurred - Message: {}", ex.getMessage());
+
+        ErrorResponse errorResponse =
+                ErrorResponse.of(ex.getErrorCode(), request.getRequestURI());
+
+        return ResponseEntity
+                .status(ex.getErrorCode().getHttpStatus())
+                .body(errorResponse);
+    }
+
+
+    /**
      * 요청 데이터 검증 오류 처리 (@Valid 실패)
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -79,6 +98,24 @@ public class GlobalExceptionHandler {
 
         log.warn("handleJwtAuthenticationException occurred - Message: {}", ex.getMessage());
         ErrorResponse errorResponse = ErrorResponse.of(ex.getErrorCode(), request.getRequestURI());
+
+        return ResponseEntity
+                .status(ex.getErrorCode().getHttpStatus())
+                .body(errorResponse);
+    }
+
+    /**
+     * File 관련 예외 처리
+     */
+    @ExceptionHandler(FileObjectException.class)
+    public ResponseEntity<ErrorResponse> handleFileObjectException(
+            CreatorException ex,
+            HttpServletRequest request) {
+
+        log.warn("FileObjectException occurred - Message: {}", ex.getMessage());
+
+        ErrorResponse errorResponse =
+                ErrorResponse.of(ex.getErrorCode(), request.getRequestURI());
 
         return ResponseEntity
                 .status(ex.getErrorCode().getHttpStatus())

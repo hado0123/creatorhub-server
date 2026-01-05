@@ -20,9 +20,9 @@ public class AuthController {
      * 로그인
      */
     @PostMapping("/login")
-    public ResponseEntity<TokenPair> login(@RequestBody LoginRequest request) {
-        log.info("로그인 요청 - email={}", request.email());
-        TokenPair tokenPair = authService.login(request.email(), request.password());
+    public ResponseEntity<TokenPair> login(@RequestBody LoginRequest req) {
+        log.info("로그인 요청 - email={}", req.email());
+        TokenPair tokenPair = authService.login(req.email(), req.password());
         return ResponseEntity.ok(tokenPair);
     }
 
@@ -30,9 +30,9 @@ public class AuthController {
      * refresh 토큰 재발급
      */
     @PostMapping("/refresh")
-    public ResponseEntity<TokenPair> refresh(@RequestBody RefreshRequest request) {
+    public ResponseEntity<TokenPair> refresh(@RequestBody RefreshRequest req) {
         log.info("토큰 재발급 요청");
-        TokenPair tokenPair = authService.refresh(request.refreshToken());
+        TokenPair tokenPair = authService.refresh(req.refreshToken());
         return ResponseEntity.ok(tokenPair);
     }
 
