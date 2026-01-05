@@ -52,6 +52,24 @@ public class GlobalExceptionHandler {
                 .body(errorResponse);
     }
 
+    /**
+     * Creator 관련 예외 처리
+     */
+    @ExceptionHandler(CreationException.class)
+    public ResponseEntity<ErrorResponse> handleCreationException(
+            CreationException ex,
+            HttpServletRequest request) {
+
+        log.warn("CreationException occurred - Message: {}", ex.getMessage());
+
+        ErrorResponse errorResponse =
+                ErrorResponse.of(ex.getErrorCode(), request.getRequestURI());
+
+        return ResponseEntity
+                .status(ex.getErrorCode().getHttpStatus())
+                .body(errorResponse);
+    }
+
 
     /**
      * 요청 데이터 검증 오류 처리 (@Valid 실패)

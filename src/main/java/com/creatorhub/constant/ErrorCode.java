@@ -11,8 +11,13 @@ public enum ErrorCode {
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "M003", "비밀번호가 올바르지 않습니다."),
 
     // Creator 관련 에러
-    ALREADY_CREATOR(HttpStatus.CONFLICT, "C001", "이미 존재하는 작가입니다."),
-    CREATOR_NOT_FOUND(HttpStatus.NOT_FOUND, "C002", "존재하는 않는 작가입니다."),
+    ALREADY_CREATOR(HttpStatus.CONFLICT, "MC001", "이미 존재하는 작가입니다."),
+    CREATOR_NOT_FOUND(HttpStatus.NOT_FOUND, "MC002", "존재하는 않는 작가입니다."),
+
+    // Creation 관련 에러
+    ALREADY_CREATION(HttpStatus.CONFLICT, "C001", "이미 존재하는 작품입니다."),
+    CREATION_NOT_FOUND(HttpStatus.NOT_FOUND, "C002", "존재하는 않는 작품입니다."),
+    CREATION_FAVORITE_NOT_FOUND(HttpStatus.NOT_FOUND, "C003", "관심 작품으로 등록되어있지 않습니다."),
 
     // Authorization 관련 에러
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "A001", "접근이 제한되었습니다."),
