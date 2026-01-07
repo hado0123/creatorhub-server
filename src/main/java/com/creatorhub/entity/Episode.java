@@ -55,6 +55,12 @@ public class Episode extends BaseEntity {
     @Column
     private Integer favoriteCount;
 
+    @Column
+    private Integer ratingSum;
+
+    @Column
+    private Integer ratingCount;
+
     @Column(precision = 3, scale = 2)
     private BigDecimal ratingAverage;
 
@@ -79,6 +85,8 @@ public class Episode extends BaseEntity {
         this.isPublic = isPublic;
         this.likeCount = 0;
         this.favoriteCount = 0;
+        this.ratingSum = 0;
+        this.ratingCount = 0;
         this.ratingAverage = new BigDecimal(0);
     }
 

@@ -22,4 +22,16 @@ public interface EpisodeRepository extends JpaRepository<Episode, Long> {
     """)
     void updateLikeCountSafely(@Param("episodeId") Long episodeId,
                               @Param("delta") int delta);
+
+    // 별점 최초 등록: sum += score, count += 1, avg = sum/count
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        UPDATE Episode e
+           SET e.ratingSum   = COALESCE(e.ratingSum, 0) + :score,
+               e.ratingCount = COALESCE(e.ratingCount, 0) + 1,
+               e.ratingAverage   = (COALESCE(e.ratingSum, 0) + :score) * 1.0 / (COALESCE(e.ratingCount, 0) + 1)
+         WHERE e.id = :episodeId
+    """)
+    void addRating(@Param("episodeId") Long episodeId,
+                  @Param("score") int score);
 }
