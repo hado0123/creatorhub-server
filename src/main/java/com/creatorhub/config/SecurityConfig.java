@@ -2,7 +2,7 @@ package com.creatorhub.config;
 
 import com.creatorhub.security.filter.JWTCheckFilter;
 import com.creatorhub.security.handler.JwtAuthenticationEntryPoint;
-import com.creatorhub.security.util.JWTUtil;
+import com.creatorhub.security.utils.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -57,7 +57,7 @@ public class SecurityConfig {
 
         // 나머지 인가 설정
         httpSecurity.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/members/signup", "/error").permitAll()
+                .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/members/signup", "/api/files/resize-complete", "/error").permitAll()
                 .anyRequest().authenticated()
         );
         return httpSecurity.build();

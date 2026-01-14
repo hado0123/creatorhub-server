@@ -8,7 +8,7 @@ import com.creatorhub.entity.Member;
 import com.creatorhub.exception.MemberNotFoundException;
 import com.creatorhub.repository.MemberRepository;
 import com.creatorhub.security.exception.JwtAuthenticationException;
-import com.creatorhub.security.util.JWTUtil;
+import com.creatorhub.security.utils.JWTUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,10 @@
 package com.creatorhub.service;
 
 import com.creatorhub.constant.FileObjectStatus;
+import com.creatorhub.constant.ThumbnailKeys;
 import com.creatorhub.dto.DerivativesCheckResponse;
 import com.creatorhub.dto.FileObjectResponse;
+import com.creatorhub.dto.s3.ResizeCompleteRequest;
 import com.creatorhub.entity.FileObject;
 import com.creatorhub.exception.FileObjectNotFoundException;
 import com.creatorhub.repository.FileObjectRepository;
@@ -67,7 +69,9 @@ public class FileObjectService {
         }
     }
 
-
+    /**
+     * 프론트엔드에서 폴링 요청시 S3 client로 리사이징 이미지 확인 -> 이후 file_object 테이블에 insert or update
+     */
     @Transactional // 더티체킹
     public List<FileObjectResponse> checkAndGetStatus(Long fileObjectId) {
         FileObject original = fileObjectRepository.findById(fileObjectId)
@@ -135,6 +139,64 @@ public class FileObjectService {
         // 5. 원본 + 리사이징 데이터 응답
         List<FileObject> allFiles = fileObjectRepository.findByStorageKeyStartingWith(baseKey);
 
+        return FileObjectResponse.listFrom(allFiles);
+    }
+
+    /**
+     * 람다에서 백엔드 콜백시 리사이징 이미지 file_object 테이블에 insert or update
+     */
+    @Transactional
+    public List<FileObjectResponse> checkAndGetStatus(ResizeCompleteRequest req) {
+
+        String baseKey = req.baseKey();
+        String originalKey = baseKey + ThumbnailKeys.HORIZONTAL_SUFFIX;
+
+        FileObject original = fileObjectRepository.findByStorageKey(originalKey)
+                .orElseThrow(() -> new FileObjectNotFoundException(
+                        "해당 StorageKey를 가진 FileObject를 찾을 수 없습니다: " + originalKey
+                ));
+
+        DerivativesCheckResponse resp = checker.getDerivedSizes(baseKey, req.derivedFiles());
+
+        // 6개 키 생성
+        List<String> expectedKeys = ThumbnailKeys.DERIVED_SUFFIXES.stream()
+                .map(suffix -> baseKey + suffix)
+                .toList();
+
+        // 기존 존재하는 것 조회
+        Map<String, FileObject> existingMap = fileObjectRepository.findByStorageKeyIn(expectedKeys).stream()
+                .collect(Collectors.toMap(FileObject::getStorageKey, fo -> fo));
+
+        List<FileObject> toInsert = new ArrayList<>();
+
+        for (String key : expectedKeys) {
+            long sizeBytes = resp.derivedSizeByKey().getOrDefault(key, 0L);
+
+            // size가 0이면 '없음(업로드 실패)'로 간주
+            FileObjectStatus status = (sizeBytes == 0L) ? FileObjectStatus.FAILED : FileObjectStatus.READY;
+
+            FileObject fo = existingMap.get(key);
+
+            if (fo == null) {
+                toInsert.add(FileObject.create(
+                        key,
+                        original.getOriginalFilename(),
+                        status,
+                        original.getContentType(),
+                        sizeBytes
+                ));
+            } else {
+                if (status == FileObjectStatus.READY) fo.markReady();
+                else fo.markFailed();
+                fo.markSize(sizeBytes);
+            }
+        }
+
+        if (!toInsert.isEmpty()) {
+            fileObjectRepository.saveAll(toInsert);
+        }
+
+        List<FileObject> allFiles = fileObjectRepository.findByStorageKeyStartingWith(baseKey);
         return FileObjectResponse.listFrom(allFiles);
     }
 }

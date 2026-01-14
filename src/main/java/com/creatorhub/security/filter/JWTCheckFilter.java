@@ -5,7 +5,7 @@ import com.creatorhub.constant.Role;
 import com.creatorhub.dto.TokenPayload;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.security.exception.JwtAuthenticationException;
-import com.creatorhub.security.util.JWTUtil;
+import com.creatorhub.security.utils.JWTUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -37,13 +38,16 @@ public class JWTCheckFilter extends OncePerRequestFilter {
         // 토큰 없이 접근 허용할 경로들
         return path.equals("/api/auth/login")          // 로그인
                 || path.equals("/api/auth/refresh")    // 토큰 재발급
-                || path.equals("/api/members/signup"); // 회원가입
+                || path.equals("/api/members/signup") // 회원가입
+                || path.equals("//api/files/resize-complete"); // 이미지 리사이즈 완료 콜백
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
+    )
             throws ServletException, IOException {
 
         log.info("JWTCheckFilter doFilter............ ");
@@ -115,7 +119,6 @@ public class JWTCheckFilter extends OncePerRequestFilter {
                     new JwtAuthenticationException(ErrorCode.EXPIRE_TOKEN, e);
 
             authenticationEntryPoint.commence(request, response, authEx);
-            return;
 
         } catch (JwtException e) {
             log.warn("JWTCheckFilter - JwtException 발생, INVALID_TOKEN 응답", e);
@@ -124,7 +127,6 @@ public class JWTCheckFilter extends OncePerRequestFilter {
                     new JwtAuthenticationException(ErrorCode.INVALID_TOKEN, e);
 
             authenticationEntryPoint.commence(request, response, authEx);
-            return;
         }
     }
 }

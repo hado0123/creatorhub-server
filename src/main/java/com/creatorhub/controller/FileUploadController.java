@@ -1,5 +1,6 @@
 package com.creatorhub.controller;
 
+import com.creatorhub.common.sse.SseEmitters;
 import com.creatorhub.dto.FileObjectResponse;
 import com.creatorhub.dto.s3.*;
 import com.creatorhub.service.FileObjectService;
@@ -7,6 +8,7 @@ import com.creatorhub.service.s3.S3PresignedUploadService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +22,8 @@ import java.util.stream.Collectors;
 public class FileUploadController {
     private final S3PresignedUploadService uploadService;
     private final FileObjectService fileObjectService;
+    private final SseEmitters sseEmitters;
+
 
     /**
      * 작품 썸네일 presigned url 요청
@@ -86,5 +90,28 @@ public class FileUploadController {
     @GetMapping("/{fileObjectId}/status")
     public List<FileObjectResponse> getStatus(@PathVariable Long fileObjectId) {
         return fileObjectService.checkAndGetStatus(fileObjectId);
+    }
+
+    /**
+     * fileObject 작품등록시 가로 리사이징 이미지 업로드 상태 확인(폴링용) & file_object insert
+     */
+    @PostMapping("/resize-complete")
+    public ResponseEntity<Void> resizeComplete(@Valid @RequestBody ResizeCompleteRequest req) {
+        log.info(
+                "이미지 리사이즈 callback received - triggerKey={}, baseKey={}, derivedCount={}",
+                req.triggerKey(),
+                req.baseKey(),
+                req.derivedFiles().size()
+        );
+
+        List<FileObjectResponse> result = fileObjectService.checkAndGetStatus(req);
+
+        // SSE send
+        String baseKey = req.baseKey();
+        if (baseKey != null && !baseKey.isBlank()) {
+            sseEmitters.send(baseKey, "resize-complete", result);
+        }
+
+        return ResponseEntity.ok().build();
     }
 }
