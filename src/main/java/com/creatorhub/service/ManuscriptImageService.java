@@ -35,19 +35,11 @@ public class ManuscriptImageService {
         List<ManuscriptImage> images = manuscripts.stream()
                 .map(m -> {
                     FileObject fo = fileObjectMap.get(m.fileObjectId());
-                    short order = safeToShort(m.displayOrder(), "displayOrder");
+                    int order = m.displayOrder();
                     return ManuscriptImage.create(fo, episode, order);
                 })
                 .toList();
 
         return manuscriptImageRepository.saveAll(images);
-    }
-
-    private short safeToShort(Integer value, String fieldName) {
-        if (value == null) throw new IllegalArgumentException(fieldName + "가 null입니다.");
-        if (value < Short.MIN_VALUE || value > Short.MAX_VALUE) {
-            throw new IllegalArgumentException(fieldName + " 범위가 short를 초과합니다: " + value);
-        }
-        return value.shortValue();
     }
 }
