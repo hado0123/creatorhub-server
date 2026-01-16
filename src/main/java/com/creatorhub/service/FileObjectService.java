@@ -89,38 +89,41 @@ public class FileObjectService {
         Map<String, FileObject> existingMap = existing.stream()
                 .collect(Collectors.toMap(FileObject::getStorageKey, fo -> fo));
 
-        List<FileObject> toInsert = new ArrayList<>();
 
-        // 3. 6개 모두 없으면 insert 있으면 update
-        for (String key : derivedKeys) {
-            long sizeBytes = sizeByKey.getOrDefault(key, 0L);
+        // 3. 6개 file_object 없으면 insert 있으면 update
 
-            boolean isMissing = missingSet.contains(key);
-            FileObjectStatus status = isMissing ? FileObjectStatus.FAILED : FileObjectStatus.READY;
+        // 3-1. 있으면 update
+        derivedKeys.stream()
+                .map(existingMap::get)
+                .filter(Objects::nonNull)
+                .forEach(fo -> {
+                    String key = fo.getStorageKey();
+                    long sizeBytes = sizeByKey.getOrDefault(key, 0L);
 
-            FileObject fo = existingMap.get(key);
+                    if (missingSet.contains(key)) fo.markFailed();
+                    else fo.markReady();
 
-            if (fo == null) {
-                // 없으면 insert
-                toInsert.add(
-                        FileObject.create(
-                                key,
-                                original.getOriginalFilename(),
-                                status,
-                                original.getContentType(),
-                                sizeBytes
-                        )
-                );
-            } else {
-                // 있으면 update
-                if (status == FileObjectStatus.READY) fo.markReady();
-                else fo.markFailed();
+                    fo.markSize(sizeBytes);
+                });
 
-                fo.markSize(sizeBytes);
-            }
-        }
 
-        // 4. 동시 폴링 대비: UNIQUE(storage_key) 기준으로 중복 insert는 무시
+        // 3-2. 없는 것들은 toInsert 생성
+        List<FileObject> toInsert = derivedKeys.stream()
+                .filter(key -> !missingSet.contains(key))
+                .map(key -> {
+                    long sizeBytes = sizeByKey.getOrDefault(key, 0L);
+                    FileObjectStatus status = missingSet.contains(key) ? FileObjectStatus.FAILED : FileObjectStatus.READY;
+
+                    return FileObject.create(
+                            key,
+                            original.getOriginalFilename(),
+                            status,
+                            original.getContentType(),
+                            sizeBytes
+                    );
+                })
+                .toList();
+
         if (!toInsert.isEmpty()) {
             try {
                 fileObjectRepository.saveAll(toInsert);
