@@ -7,6 +7,7 @@ import com.creatorhub.dto.ManuscriptRegisterItem;
 import com.creatorhub.entity.*;
 import com.creatorhub.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,21 +24,27 @@ public class EpisodeService {
     private final EpisodeThumbnailRepository episodeThumbnailRepository;
 
     @Transactional
-    public EpisodeResponse publishEpisode(EpisodeRequest req) {
+    public EpisodeResponse publishEpisode(EpisodeRequest req, Long memberId) {
 
         // 1. Creation 조회
         Creation creation = creationRepository.findById(req.creationId())
                 .orElseThrow(() -> new IllegalArgumentException("해당 Creation을 찾을 수 없습니다: " + req.creationId()));
 
-        // 2. episodeNum 중복 체크(회차)
+        // 2. 인가 체크(로그인한 사용자가 해당 작품의 작가인지 확인)
+        Long ownerMemberId = creation.getCreator().getMember().getId();
+        if (!ownerMemberId.equals(memberId)) {
+            throw new AccessDeniedException("해당 작품에 대한 회차 등록 권한이 없습니다.");
+        }
+
+        // 3. episodeNum 중복 체크(회차)
         if (episodeRepository.existsByCreationIdAndEpisodeNum(req.creationId(), req.episodeNum())) {
             throw new IllegalArgumentException("이미 존재하는 회차 번호입니다. creationId=" + req.creationId() + ", episodeNum=" + req.episodeNum());
         }
 
-        // 3. 원고 displayOrder 중복 체크
+        // 4. 원고 displayOrder 중복 체크
         ensureNoDuplicateDisplayOrder(req.manuscripts());
 
-        // 4. fileObjectId 전체 모아서 한번에 조회 (에피소드 썸네일 + sns 썸네일 2개)
+        // 5. fileObjectId 전체 모아서 한번에 조회 (에피소드 썸네일 + sns 썸네일 2개)
         Set<Long> allFileObjectIds = new HashSet<>();
         req.manuscripts().forEach(m -> allFileObjectIds.add(m.fileObjectId()));
         allFileObjectIds.add(req.episodeFileObjectId());
@@ -46,7 +53,7 @@ public class EpisodeService {
         Map<Long, FileObject> fileObjectMap = findAllFileObjectsOrThrow(allFileObjectIds);
 
 
-        // 5. episode 생성/저장
+        // 6. episode 생성/저장
         Episode episode = Episode.create(
                 creation,
                 req.episodeNum(),
@@ -57,7 +64,7 @@ public class EpisodeService {
         );
         Episode savedEpisode = episodeRepository.save(episode);
 
-        // 6. manuscript_image 생성/저장
+        // 7. manuscript_image 생성/저장
         List<ManuscriptImage> manuscriptImages = req.manuscripts().stream()
                 .map(m -> {
                     FileObject fo = fileObjectMap.get(m.fileObjectId());
@@ -68,7 +75,7 @@ public class EpisodeService {
 
         List<ManuscriptImage> savedManuscripts = manuscriptImageRepository.saveAll(manuscriptImages);
 
-        // 7. episode_thumbnail 생성/저장
+        // 8. episode_thumbnail 생성/저장
         FileObject episodeThumbFo = fileObjectMap.get(req.episodeFileObjectId());
         FileObject snsThumbFo = fileObjectMap.get(req.snsFileObjectId());
 
@@ -84,7 +91,7 @@ public class EpisodeService {
 
         List<EpisodeThumbnail> savedThumbnails = episodeThumbnailRepository.saveAll(thumbnails);
 
-        // 8. 응답
+        // 9. 응답
         return new EpisodeResponse(
                 savedEpisode.getId(),
                 savedEpisode.getEpisodeNum(),
