@@ -31,7 +31,7 @@ public record EpisodeRequest(
         Long snsFileObjectId,
 
         @NotEmpty(message = "원고 파일 목록이 비어있습니다.")
-        @Size(max = 200, message = "원고는 200장 이하여야 합니다.") // 정책값
+        @Size(max = 50, message = "원고는 50장 이하여야 합니다.") // 정책값
                 List<@Valid ManuscriptRegisterItem> manuscripts
 
         ) { }
