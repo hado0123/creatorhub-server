@@ -112,12 +112,11 @@ public class FileObjectService {
                 .filter(key -> !missingSet.contains(key))
                 .map(key -> {
                     long sizeBytes = sizeByKey.getOrDefault(key, 0L);
-                    FileObjectStatus status = missingSet.contains(key) ? FileObjectStatus.FAILED : FileObjectStatus.READY;
 
                     return FileObject.create(
                             key,
                             original.getOriginalFilename(),
-                            status,
+                            FileObjectStatus.READY,
                             original.getContentType(),
                             sizeBytes
                     );
