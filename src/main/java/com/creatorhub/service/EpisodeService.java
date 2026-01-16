@@ -1,9 +1,7 @@
 package com.creatorhub.service;
 
-import com.creatorhub.constant.EpisodeThumbnailType;
 import com.creatorhub.dto.EpisodeRequest;
 import com.creatorhub.dto.EpisodeResponse;
-import com.creatorhub.dto.ManuscriptRegisterItem;
 import com.creatorhub.entity.*;
 import com.creatorhub.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +18,8 @@ public class EpisodeService {
     private final CreationRepository creationRepository;
     private final EpisodeRepository episodeRepository;
     private final FileObjectRepository fileObjectRepository;
-    private final ManuscriptImageRepository manuscriptImageRepository;
-    private final EpisodeThumbnailRepository episodeThumbnailRepository;
+    private final ManuscriptImageService manuscriptImageService;
+    private final EpisodeThumbnailService episodeThumbnailService;
 
     @Transactional
     public EpisodeResponse publishEpisode(EpisodeRequest req, Long memberId) {
@@ -42,10 +40,10 @@ public class EpisodeService {
         }
 
         // 4. 원고 displayOrder 중복 체크
-        ensureNoDuplicateDisplayOrder(req.manuscripts());
+        manuscriptImageService.validateDisplayOrders(req.manuscripts());
 
-        // 5. fileObjectId 전체 모아서 한번에 조회 (에피소드 썸네일 + sns 썸네일 2개)
-        Set<Long> allFileObjectIds = new HashSet<>();
+        // 5. fileObjectId 한번에 조회 (에피소드 '썸네일 + sns 썸네일 + 원고 이미지')
+        Set<Long> allFileObjectIds = new HashSet<>(); // 중복제거
         req.manuscripts().forEach(m -> allFileObjectIds.add(m.fileObjectId()));
         allFileObjectIds.add(req.episodeFileObjectId());
         allFileObjectIds.add(req.snsFileObjectId());
@@ -65,31 +63,10 @@ public class EpisodeService {
         Episode savedEpisode = episodeRepository.save(episode);
 
         // 7. manuscript_image 생성/저장
-        List<ManuscriptImage> manuscriptImages = req.manuscripts().stream()
-                .map(m -> {
-                    FileObject fo = fileObjectMap.get(m.fileObjectId());
-                    short order = safeToShort(m.displayOrder(), "displayOrder");
-                    return ManuscriptImage.create(fo, savedEpisode, order);
-                })
-                .toList();
-
-        List<ManuscriptImage> savedManuscripts = manuscriptImageRepository.saveAll(manuscriptImages);
+        List<ManuscriptImage> savedManuscripts = manuscriptImageService.createAndSave(req.manuscripts(), episode, fileObjectMap);
 
         // 8. episode_thumbnail 생성/저장
-        FileObject episodeThumbFo = fileObjectMap.get(req.episodeFileObjectId());
-        FileObject snsThumbFo = fileObjectMap.get(req.snsFileObjectId());
-
-        // 같은 fileObjectId를 둘 다 넣는 실수 방지
-        if (Objects.equals(req.episodeFileObjectId(), req.snsFileObjectId())) {
-            throw new IllegalArgumentException("episodeFileObjectId와 snsFileObjectId는 서로 달라야 합니다.");
-        }
-
-        List<EpisodeThumbnail> thumbnails = List.of(
-                EpisodeThumbnail.create(episodeThumbFo, savedEpisode, EpisodeThumbnailType.EPISODE),
-                EpisodeThumbnail.create(snsThumbFo, savedEpisode, EpisodeThumbnailType.SNS)
-        );
-
-        List<EpisodeThumbnail> savedThumbnails = episodeThumbnailRepository.saveAll(thumbnails);
+        List<EpisodeThumbnail> savedThumbnails = episodeThumbnailService.createAndSave(req, episode, fileObjectMap);
 
         // 9. 응답
         return new EpisodeResponse(
@@ -100,14 +77,6 @@ public class EpisodeService {
         );
     }
 
-    private void ensureNoDuplicateDisplayOrder(List<ManuscriptRegisterItem> manuscripts) {
-        Set<Integer> seen = new HashSet<>();
-        for (ManuscriptRegisterItem m : manuscripts) {
-            if (!seen.add(m.displayOrder())) {
-                throw new IllegalArgumentException("중복된 displayOrder가 있습니다: " + m.displayOrder());
-            }
-        }
-    }
 
     private Map<Long, FileObject> findAllFileObjectsOrThrow(Set<Long> ids) {
         List<FileObject> found = fileObjectRepository.findAllById(ids);
@@ -119,14 +88,6 @@ public class EpisodeService {
         }
 
         return found.stream().collect(Collectors.toMap(FileObject::getId, fo -> fo));
-    }
-
-    private short safeToShort(Integer value, String fieldName) {
-        if (value == null) throw new IllegalArgumentException(fieldName + "가 null입니다.");
-        if (value < Short.MIN_VALUE || value > Short.MAX_VALUE) {
-            throw new IllegalArgumentException(fieldName + " 범위가 short를 초과합니다: " + value);
-        }
-        return value.shortValue();
     }
 
 }
