@@ -36,12 +36,12 @@ creatorhub-server/
 │        ├─ application-local-secret.yml # 개발용 비공개 설정(gitignore)
 │        ├─ application-prod.yml # 배포용 설정
 │        └─ application-test.yml  # 테스트 코드용 설정
+├─ .env # docker 컨테이너 생성시 사용되는 비공개 설정
 ├─ docker-compose.override.yml # 개발용 docker-compose
 ├─ docker-compose.prod.yml # 배포용 docker-compose
 ├─ docker-compose.yml # 공통 docker-compose
-└─Dockerfile # 백엔드 배포용 컨테이너 이미지 빌드용
+└─ Dockerfile # 백엔드 배포용 컨테이너 이미지 빌드용
 ```
-
 ---
 
 ## 🐳 3. Docker 기반 실행/배포
@@ -52,11 +52,20 @@ creatorhub-server/
 <br/>
 
 ### 🔹 Local Development (개발용 실행)
-1. 개발을 한다면 docker-compose.yml에 정의된 모든 서비스 컨테이너(mysql, redis)를 생성하고 백그라운드로 실행합니다.
+1. 개발시 mysql, redis 컨테이너만 사용합니다.
 
 ```bash
-# docker-compose.override.yml 포함(내 로컬의 특정 포트로 들어온 요청을 컨테이너 안의 포트로 포워딩)
-docker compose up -d
+# docker-compose.override.yml 포함
+docker compose up -d mysql redis
+```
+
+- (참고) docker-compose.override.yml은 내 로컬의 특정 포트로 들어온 요청을 컨테이너 안의 포트로 포워딩하기 위해 아래와 같이 구성되어 있습니다.
+```bash
+ services:
+  mysql:
+    ports: ["3306:3306"]
+  redis:
+    ports: ["6379:6379"]
 ```
 
 <br/>
