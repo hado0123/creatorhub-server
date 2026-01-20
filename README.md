@@ -111,11 +111,11 @@ SPRING_PROFILES_ACTIVE=local
 ```bash
 # docker-compose.prod.yml 포함
 # mysql, redis를 먼저 기동하여 초기화 시간 확보
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d mysql redis
+sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d mysql redis
 ```
 
 ```bash
 # docker-compose.prod.yml 포함
 # spring app 이미지 빌드 후 실행
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build app
+sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d app
 ```

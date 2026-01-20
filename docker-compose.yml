@@ -16,6 +16,7 @@ services:
       - ./mysql-init:/docker-entrypoint-initdb.d
     networks:
       - creatorhub-network
+    restart: unless-stopped
 
   redis:
     image: redis:7.2-alpine
@@ -25,7 +26,7 @@ services:
       - redis-data:/data
     networks:
       - creatorhub-network
-    restart: always
+    restart: unless-stopped
 
 volumes:
   redis-data:
