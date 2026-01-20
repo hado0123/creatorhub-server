@@ -27,20 +27,22 @@ creatorhub-server/
 │        ├─ Dockerfile # 람다 컨테이너 이미지 빌드용(ECR 업로드 대상)
 │        └─ index.js # 리사이징 lambda함수
 ├─ mysql-data/  # 로컬 MySQL 볼륨 데이터(자동 생성, gitignore)
-├─ mysql-init/  # MySQL 초기화 스크립트(개발/테스트용)
+├─ mysql-init/  # MySQL 초기화 스크립트
+│
 ├─ src/
 │  └─ main/
 │     └─ resources/
-│        ├─ application.yml # 공통 설정
-│        ├─ application-local.yml # 개발용 설정
-│        ├─ application-local-secret.yml # 개발용 비공개 설정(gitignore)
-│        ├─ application-prod.yml # 배포용 설정
-│        └─ application-test.yml  # 테스트 코드용 설정
-├─ .env # docker 컨테이너 생성시 사용되는 비공개 설정
-├─ docker-compose.override.yml # 개발용 docker-compose
-├─ docker-compose.prod.yml # 배포용 docker-compose
-├─ docker-compose.yml # 공통 docker-compose
-└─ Dockerfile # 백엔드 배포용 컨테이너 이미지 빌드용
+│        ├─ application.yml # 공통
+│        ├─ application-local.yml # 개발용
+│        ├─ application-local-secret.yml # 개발용(비공개, gitignore)
+│        ├─ application-prod.yml # 배포용
+│        └─ application-test.yml  # 테스트 코드용
+│
+├─ .env # docker 컨테이너 생성시 사용(비공개, gitignore)
+├─ docker-compose.override.yml # 개발용
+├─ docker-compose.prod.yml # 배포용
+├─ docker-compose.yml # 공통
+└─ Dockerfile # 배포용 컨테이너 이미지 빌드용
 ```
 ---
 
