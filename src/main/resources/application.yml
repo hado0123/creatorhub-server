@@ -1,18 +1,12 @@
 logging:
   level:
     org:
-      springframework:
-        web: DEBUG
       hibernate:
         type:
           descriptor:
             sql: trace
-    com:
-      creatorhub: DEBUG
 
 spring:
-  config:
-    import: application-secret.yml
   application:
     name: creatorhub-server
   jpa:
@@ -22,27 +16,9 @@ spring:
           batch_size: '20'
         order_updates: 'true'
         order_inserts: 'true'
-        format_sql: 'true'
-        show_sql: 'true'
-    hibernate:
-      ddl-auto: update
     database-platform: org.hibernate.dialect.MySQLDialect
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-  data:
-    redis:
-      # host: redis   # Spring Boot Docker 컨테이너 + Redis 도커
-      host: localhost   # Spring Boot IDE에서 실행 + Redis 도커
-      port: 6379
-      # password: 우선 생략(미설정)
-      timeout: 2000
-
-server:
-  port: '8000'
-
-jwt:
-  access-token-exp-min: 30
-  refresh-token-exp-days: 7
 
 cloud:
   aws:

@@ -1,0 +1,25 @@
+server:
+  port: '8000'
+
+logging:
+  level:
+    org:
+      springframework:
+        web: DEBUG
+    com:
+      creatorhub: DEBUG
+
+spring:
+  config:
+    import: application-local-secret.yml
+  jpa:
+    properties:
+      hibernate:
+        format_sql: 'true'
+        show_sql: 'true'
+    hibernate:
+      ddl-auto: update
+
+jwt:
+  access-token-exp-min: 600
+  refresh-token-exp-days: 7
