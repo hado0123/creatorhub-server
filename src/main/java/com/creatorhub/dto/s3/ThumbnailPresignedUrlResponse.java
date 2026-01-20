@@ -1,6 +1,6 @@
-package com.creatorhub.dto;
+package com.creatorhub.dto.s3;
 
-public record S3PresignedUrlResponse (
+public record ThumbnailPresignedUrlResponse(
         Long fileObjectId,
         String uploadUrl,
         String objectKey

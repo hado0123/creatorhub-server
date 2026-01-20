@@ -45,12 +45,10 @@ public class Creator extends BaseTimeEntity {
     }
 
     public static Creator createCreator(Member member,
-//                                        FileObject fileObject,
                                         String creatorName,
                                         String introduction) {
         return Creator.builder()
                 .member(member)
-//                .fileObject(fileObject)
                 .creatorName((creatorName != null) ? creatorName : member.getName()) // 필명이 없을시 기존 회원가입 name 사용
                 .introduction(introduction)
                 .build();

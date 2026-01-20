@@ -21,7 +21,7 @@ public class CreationController {
     /**
      * 작품등록
      */
-    @PostMapping("create")
+    @PostMapping("/create")
     public ResponseEntity<Map<String, Object>> createCreation(@Valid @RequestBody CreationRequest req) {
         log.info("작품등록 요청 - creatorId={}, title={}, isPublic={}",
                 req.creatorId(),
