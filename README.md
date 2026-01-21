@@ -11,7 +11,8 @@
 - Spring Boot 3.5.7
 - MySQL 8.0
 - Redis 7.2-alpine
-- Docker
+- Docker 28.5.1
+- Docker Compose 2.40.2
 - Gradle 8.14.3
 - IntelliJ IDEA
 

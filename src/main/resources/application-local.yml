@@ -1,13 +1,13 @@
 server:
-  port: '8000'
+  port: 8000
 
 logging:
   level:
-    org:
-      springframework:
-        web: DEBUG
-    com:
-      creatorhub: DEBUG
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql: trace
+    org.springframework.web: debug
+    com.creatorhub: debug
+    com.zaxxer.hikari: debug
 
 spring:
   config:
@@ -15,8 +15,8 @@ spring:
   jpa:
     properties:
       hibernate:
-        format_sql: 'true'
-        show_sql: 'true'
+        format_sql: true
+        show_sql: true
     hibernate:
       ddl-auto: update
 

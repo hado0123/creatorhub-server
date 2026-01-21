@@ -3,18 +3,17 @@ server:
 
 logging:
   level:
-    org:
-      springframework:
-        web: INFO
-    com:
-      creatorhub: INFO
+    org.hibernate.SQL: info
+    org.springframework.web: info
+    com.creatorhub: info
+    com.zaxxer.hikari: info
 
 spring:
   jpa:
     properties:
       hibernate:
-        format_sql: 'false'
-        show_sql: 'false'
+        format_sql: false
+        show_sql: false
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
   datasource:
