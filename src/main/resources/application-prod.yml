@@ -6,7 +6,6 @@ logging:
     org.hibernate.SQL: info
     org.springframework.web: info
     com.creatorhub: info
-    com.zaxxer.hikari: info
 
 spring:
   jpa:

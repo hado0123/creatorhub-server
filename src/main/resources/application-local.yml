@@ -1,5 +1,5 @@
 server:
-  port: 8000
+  port: 80
 
 logging:
   level:
@@ -7,7 +7,6 @@ logging:
     org.hibernate.type.descriptor.sql: trace
     org.springframework.web: debug
     com.creatorhub: debug
-    com.zaxxer.hikari: debug
 
 spring:
   config:
