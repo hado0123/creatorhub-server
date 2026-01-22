@@ -1,6 +1,7 @@
-package com.creatorhub.exception;
+package com.creatorhub.exception.fileUpload;
 
 import com.creatorhub.constant.ErrorCode;
+import com.creatorhub.exception.creator.CreatorException;
 
 public class FileObjectNotFoundException extends CreatorException {
 

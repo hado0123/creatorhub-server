@@ -34,7 +34,7 @@ public class JWTUtil {
             this.accessSecretKey = Keys.hmacShaKeyFor(accessSecret.getBytes(StandardCharsets.UTF_8));
             this.refreshSecretKey = Keys.hmacShaKeyFor(refreshSecret.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
-            log.error("Failed to initialize JWT secret key", e);
+            log.error("JWTUtil - JWT secret key 초기화 실패", e);
             throw new IllegalStateException("JWT secret key 초기화 실패", e);
         }
 
@@ -92,7 +92,6 @@ public class JWTUtil {
     public TokenPayload validateToken(String token) {
 
         Claims claims = parseClaims(token, accessSecretKey);
-        log.debug("access token claims: {}", claims);
 
         Long id = claims.get("id", Long.class);
         String name = claims.get("name", String.class);
@@ -111,10 +110,7 @@ public class JWTUtil {
      * Refresh 토큰 검증
      */
     public RefreshTokenPayload validateRefreshToken(String token) {
-
         Claims claims = parseClaims(token, refreshSecretKey);
-        log.debug("refresh token claims: {}", claims);
-
         Long id = claims.get("id", Long.class);
 
         return new RefreshTokenPayload(id);

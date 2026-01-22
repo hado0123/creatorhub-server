@@ -4,7 +4,7 @@ import com.creatorhub.constant.ErrorCode;
 import com.creatorhub.constant.Role;
 import com.creatorhub.dto.auth.TokenPayload;
 import com.creatorhub.security.auth.CustomUserPrincipal;
-import com.creatorhub.security.exception.JwtAuthenticationException;
+import com.creatorhub.exception.auth.JwtAuthenticationException;
 import com.creatorhub.security.utils.JWTUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -32,14 +32,14 @@ public class JWTCheckFilter extends OncePerRequestFilter {
     private final AuthenticationEntryPoint authenticationEntryPoint;
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
 
         // 토큰 없이 접근 허용할 경로들
         return path.equals("/api/auth/login")          // 로그인
                 || path.equals("/api/auth/refresh")    // 토큰 재발급
                 || path.equals("/api/members/signup") // 회원가입
-                || path.equals("//api/files/resize-complete"); // 이미지 리사이즈 완료 콜백
+                || path.equals("/api/files/resize-complete"); // 이미지 리사이즈 완료 콜백
     }
 
     @Override
@@ -50,26 +50,15 @@ public class JWTCheckFilter extends OncePerRequestFilter {
     )
             throws ServletException, IOException {
 
-        log.info("JWTCheckFilter doFilter............ ");
-        log.info("requestURI: {}", request.getRequestURI());
+        log.debug("JWTCheckFilter doFilter............ ");
 
         String headerStr = request.getHeader("Authorization");
-        log.info("headerStr: {}", headerStr);
-
-        // 1) Access Token이 없는 경우 → 바로 EntryPoint 호출하고 끝
-//        if (headerStr == null || !headerStr.startsWith("Bearer ")) {
-//            JwtAuthenticationException authEx =
-//                    new JwtAuthenticationException(ErrorCode.INVALID_TOKEN);
-//
-//            authenticationEntryPoint.commence(request, response, authEx);
-//            return; // 더 이상 체인 타지 않도록 종료
-//        }
 
         // 1) Authorization 헤더가 아예 없으면 → JWT 검사는 건너뛰고 다음으로 넘김
         //    (이 경우, 나중에 인가 단계에서 401 / 혹은 404 처리가 이뤄짐)
         if (headerStr == null || headerStr.isBlank()) {
             filterChain.doFilter(request, response);
-            return;
+            return; // 더 이상 체인 타지 않도록 종료
         }
 
         // 2) 형식은 있는데 Bearer로 안시작하면 → 잘못된 토큰 형식으로 처리
@@ -77,26 +66,24 @@ public class JWTCheckFilter extends OncePerRequestFilter {
             JwtAuthenticationException authEx =
                     new JwtAuthenticationException(ErrorCode.INVALID_TOKEN);
             authenticationEntryPoint.commence(request, response, authEx);
-            return; // 더 이상 체인 타지 않도록 종료
+            return;
         }
 
         String accessToken = headerStr.substring(7);
 
         try {
-            // 2) Access Token 검증
+            // 3) Access Token 검증
             TokenPayload payload = jwtUtil.validateToken(accessToken);
-
-            log.info("TokenPayload: {}", payload);
 
             Long id = payload.id();
             Role role = payload.role();
 
-            // 3) Role enum 이 들고 있는 권한 세트로 GrantedAuthority 생성
+            // 4) Role enum 이 들고 있는 권한 세트로 GrantedAuthority 생성
             List<SimpleGrantedAuthority> authorities = role.getAuthorities().stream()
                     .map(SimpleGrantedAuthority::new)
                     .toList();
 
-            // 4) Authentication 객체 생성
+            // 5) Authentication 객체 생성
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
                             new CustomUserPrincipal(id),
@@ -104,16 +91,16 @@ public class JWTCheckFilter extends OncePerRequestFilter {
                             authorities
                     );
 
-            // 5) SecurityContextHolder에 Authentication 객체 저장
+            // 6) SecurityContextHolder에 Authentication 객체 저장
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(authenticationToken);
             SecurityContextHolder.setContext(context);
 
-            // 6) 다음 필터로 진행
+            // 7) 다음 필터로 진행
             filterChain.doFilter(request, response);
 
         } catch (ExpiredJwtException e) {
-            log.warn("JWTCheckFilter - ExpiredJwtException 발생", e);
+            log.warn("JWTCheckFilter - ExpiredJwtException 발생, EXPIRE_TOKEN 응답(토큰 유효기간 만료)", e);
 
             JwtAuthenticationException authEx =
                     new JwtAuthenticationException(ErrorCode.EXPIRE_TOKEN, e);
@@ -121,7 +108,7 @@ public class JWTCheckFilter extends OncePerRequestFilter {
             authenticationEntryPoint.commence(request, response, authEx);
 
         } catch (JwtException e) {
-            log.warn("JWTCheckFilter - JwtException 발생, INVALID_TOKEN 응답", e);
+            log.warn("JWTCheckFilter - JwtException 발생, INVALID_TOKEN 응답(유효하지 않는 토큰)", e);
 
             JwtAuthenticationException authEx =
                     new JwtAuthenticationException(ErrorCode.INVALID_TOKEN, e);

@@ -6,7 +6,7 @@ import com.creatorhub.dto.fileUpload.DerivativesCheckResponse;
 import com.creatorhub.dto.fileUpload.FileObjectResponse;
 import com.creatorhub.dto.s3.ResizeCompleteRequest;
 import com.creatorhub.entity.FileObject;
-import com.creatorhub.exception.FileObjectNotFoundException;
+import com.creatorhub.exception.fileUpload.FileObjectNotFoundException;
 import com.creatorhub.repository.FileObjectRepository;
 import com.creatorhub.service.s3.ImageProcessingChecker;
 import lombok.RequiredArgsConstructor;

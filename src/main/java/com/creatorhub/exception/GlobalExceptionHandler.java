@@ -2,7 +2,12 @@ package com.creatorhub.exception;
 
 import com.creatorhub.constant.ErrorCode;
 import com.creatorhub.dto.error.ErrorResponse;
-import com.creatorhub.security.exception.JwtAuthenticationException;
+import com.creatorhub.exception.creation.CreationException;
+import com.creatorhub.exception.creator.CreatorException;
+import com.creatorhub.exception.episode.EpisodeException;
+import com.creatorhub.exception.fileUpload.FileObjectException;
+import com.creatorhub.exception.member.MemberException;
+import com.creatorhub.exception.auth.JwtAuthenticationException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

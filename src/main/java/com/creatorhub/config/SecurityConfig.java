@@ -18,7 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @Slf4j
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JWTUtil jwtUtil;
@@ -31,7 +31,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        log.info("filter chain.....");
+        log.debug("Security filter chain.....");
 
         // 로그인 페이지 사용 X
         httpSecurity.formLogin(AbstractHttpConfigurer::disable);
@@ -43,9 +43,9 @@ public class SecurityConfig {
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
 
         // HttpSession 사용 X(stateless 적용)
-        httpSecurity.sessionManagement(sessionManagementConfigurer -> {
-            sessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.NEVER);
-        });
+        httpSecurity.sessionManagement(sm ->
+                sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        );
 
         // 인증 실패(401 Unauthorized) 발생 시 처리할 핸들러 등록
         httpSecurity.exceptionHandling(ex -> ex
@@ -57,7 +57,13 @@ public class SecurityConfig {
 
         // 나머지 인가 설정
         httpSecurity.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/login", "/api/auth/refresh", "/api/members/signup", "/api/files/resize-complete", "/error").permitAll()
+                .requestMatchers(
+                        "/api/auth/login",
+                        "/api/auth/refresh",
+                        "/api/members/signup",
+                        "/api/files/resize-complete",
+                        "/error"
+                ).permitAll()
                 .anyRequest().authenticated()
         );
         return httpSecurity.build();

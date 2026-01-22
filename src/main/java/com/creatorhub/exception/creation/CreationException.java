@@ -1,18 +1,18 @@
-package com.creatorhub.exception;
+package com.creatorhub.exception.creation;
 
 import com.creatorhub.constant.ErrorCode;
 import lombok.Getter;
 
 @Getter
-public class CreatorException extends RuntimeException {
+public class CreationException extends RuntimeException {
     private final ErrorCode errorCode;
 
-    public CreatorException(ErrorCode errorCode) {
+    public CreationException(ErrorCode errorCode) {
         super(errorCode.getMessage());
         this.errorCode = errorCode;
     }
 
-    public CreatorException(ErrorCode errorCode, String message) {
+    public CreationException(ErrorCode errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
     }

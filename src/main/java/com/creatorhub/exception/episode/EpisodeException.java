@@ -1,18 +1,18 @@
-package com.creatorhub.exception;
+package com.creatorhub.exception.episode;
 
 import com.creatorhub.constant.ErrorCode;
 import lombok.Getter;
 
 @Getter
-public class FileObjectException extends RuntimeException {
+public class EpisodeException extends RuntimeException {
     private final ErrorCode errorCode;
 
-    public FileObjectException(ErrorCode errorCode) {
+    public EpisodeException(ErrorCode errorCode) {
         super(errorCode.getMessage());
         this.errorCode = errorCode;
     }
 
-    public FileObjectException(ErrorCode errorCode, String message) {
+    public EpisodeException(ErrorCode errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
     }

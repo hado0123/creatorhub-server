@@ -5,6 +5,7 @@ import com.creatorhub.dto.auth.RefreshRequest;
 import com.creatorhub.dto.auth.TokenPair;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +32,7 @@ public class AuthController {
      * refresh 토큰 재발급
      */
     @PostMapping("/refresh")
-    public ResponseEntity<TokenPair> refresh(@RequestBody RefreshRequest req) {
+    public ResponseEntity<TokenPair> refresh(@Valid @RequestBody RefreshRequest req) {
         TokenPair tokenPair = authService.refresh(req.refreshToken());
         return ResponseEntity.ok(tokenPair);
     }

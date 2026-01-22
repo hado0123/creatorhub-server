@@ -1,4 +1,4 @@
-package com.creatorhub.exception;
+package com.creatorhub.exception.creator;
 
 import com.creatorhub.constant.ErrorCode;
 
