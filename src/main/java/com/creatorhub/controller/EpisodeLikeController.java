@@ -1,7 +1,7 @@
 package com.creatorhub.controller;
 
-import com.creatorhub.dto.EpisodeLikeRequest;
-import com.creatorhub.dto.EpisodeLikeResponse;
+import com.creatorhub.dto.episode.like.EpisodeLikeRequest;
+import com.creatorhub.dto.episode.like.EpisodeLikeResponse;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.service.EpisodeLikeService;
 import jakarta.validation.Valid;

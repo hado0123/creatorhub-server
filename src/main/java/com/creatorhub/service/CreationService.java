@@ -3,7 +3,7 @@ package com.creatorhub.service;
 import com.creatorhub.constant.CreationThumbnailType;
 import com.creatorhub.constant.FileObjectStatus;
 import com.creatorhub.constant.ThumbnailKeys;
-import com.creatorhub.dto.CreationRequest;
+import com.creatorhub.dto.creation.CreationRequest;
 import com.creatorhub.entity.*;
 import com.creatorhub.exception.CreatorNotFoundException;
 import com.creatorhub.exception.FileObjectNotFoundException;

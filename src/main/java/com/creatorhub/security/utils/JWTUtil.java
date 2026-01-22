@@ -1,7 +1,7 @@
 package com.creatorhub.security.utils;
 
-import com.creatorhub.dto.RefreshTokenPayload;
-import com.creatorhub.dto.TokenPayload;
+import com.creatorhub.dto.auth.RefreshTokenPayload;
+import com.creatorhub.dto.auth.TokenPayload;
 import com.creatorhub.constant.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

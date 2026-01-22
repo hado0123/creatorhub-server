@@ -1,6 +1,6 @@
 package com.creatorhub.service;
 
-import com.creatorhub.dto.EpisodeRatingResponse;
+import com.creatorhub.dto.episode.rating.EpisodeRatingResponse;
 import com.creatorhub.entity.Episode;
 import com.creatorhub.entity.EpisodeRating;
 import com.creatorhub.entity.Member;

@@ -1,4 +1,4 @@
-package com.creatorhub.dto;
+package com.creatorhub.dto.fileUpload;
 
 import java.util.List;
 import java.util.Map;

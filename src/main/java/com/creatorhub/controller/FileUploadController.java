@@ -1,7 +1,7 @@
 package com.creatorhub.controller;
 
 import com.creatorhub.common.sse.SseEmitters;
-import com.creatorhub.dto.FileObjectResponse;
+import com.creatorhub.dto.fileUpload.FileObjectResponse;
 import com.creatorhub.dto.s3.*;
 import com.creatorhub.service.FileObjectService;
 import com.creatorhub.service.s3.S3PresignedUploadService;

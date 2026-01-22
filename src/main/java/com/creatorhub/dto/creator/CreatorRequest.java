@@ -1,4 +1,4 @@
-package com.creatorhub.dto;
+package com.creatorhub.dto.creator;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

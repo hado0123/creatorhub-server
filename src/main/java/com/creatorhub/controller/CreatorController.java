@@ -1,7 +1,7 @@
 package com.creatorhub.controller;
 
-import com.creatorhub.dto.CreatorRequest;
-import com.creatorhub.dto.CreatorResponse;
+import com.creatorhub.dto.creator.CreatorRequest;
+import com.creatorhub.dto.creator.CreatorResponse;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.service.CreatorService;
 import jakarta.validation.Valid;

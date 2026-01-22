@@ -1,6 +1,6 @@
 package com.creatorhub.service;
 
-import com.creatorhub.dto.EpisodeLikeResponse;
+import com.creatorhub.dto.episode.like.EpisodeLikeResponse;
 import com.creatorhub.entity.Episode;
 import com.creatorhub.entity.EpisodeLike;
 import com.creatorhub.entity.Member;

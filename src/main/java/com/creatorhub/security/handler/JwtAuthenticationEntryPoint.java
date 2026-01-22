@@ -1,7 +1,7 @@
 package com.creatorhub.security.handler;
 
 import com.creatorhub.constant.ErrorCode;
-import com.creatorhub.dto.ErrorResponse;
+import com.creatorhub.dto.error.ErrorResponse;
 import com.creatorhub.security.exception.JwtAuthenticationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

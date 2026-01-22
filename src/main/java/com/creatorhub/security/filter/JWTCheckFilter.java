@@ -2,7 +2,7 @@ package com.creatorhub.security.filter;
 
 import com.creatorhub.constant.ErrorCode;
 import com.creatorhub.constant.Role;
-import com.creatorhub.dto.TokenPayload;
+import com.creatorhub.dto.auth.TokenPayload;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.security.exception.JwtAuthenticationException;
 import com.creatorhub.security.utils.JWTUtil;

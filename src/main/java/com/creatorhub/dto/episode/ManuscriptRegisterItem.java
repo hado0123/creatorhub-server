@@ -1,4 +1,4 @@
-package com.creatorhub.dto;
+package com.creatorhub.dto.episode;
 
 import jakarta.validation.constraints.*;
 

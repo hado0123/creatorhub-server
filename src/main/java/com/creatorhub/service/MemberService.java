@@ -1,8 +1,8 @@
 package com.creatorhub.service;
 
-import com.creatorhub.dto.MemberRequest;
-import com.creatorhub.dto.MemberResponse;
-import com.creatorhub.dto.TokenPayload;
+import com.creatorhub.dto.member.MemberRequest;
+import com.creatorhub.dto.member.MemberResponse;
+import com.creatorhub.dto.auth.TokenPayload;
 import com.creatorhub.entity.Member;
 import com.creatorhub.exception.DuplicateEmailException;
 import com.creatorhub.exception.InvalidPasswordException;
@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import static com.creatorhub.common.logging.LogMasking.maskEmail;
 
 
 @Service
@@ -40,7 +42,7 @@ public class MemberService {
 
         Member savedMember = memberRepository.save(member);
 
-        log.info("회원가입 완료 - email: {}, id: {}", savedMember.getEmail(), savedMember.getId());
+        log.info("회원가입 완료 - email: {}, memberId: {}", maskEmail(savedMember.getEmail()), savedMember.getId());
 
         return MemberResponse.from(savedMember);
     }
@@ -64,7 +66,7 @@ public class MemberService {
                 .orElseThrow(MemberNotFoundException::new);
 
         memberRepository.delete(member);
-        log.info("회원 삭제 완료 - email: {}, id: {}", member.getEmail(), member.getId());
+        log.info("회원 삭제 완료 - email: {}, memberId: {}", maskEmail(member.getEmail()), member.getId());
     }
 
     /**
@@ -78,7 +80,7 @@ public class MemberService {
             throw new InvalidPasswordException();
         }
 
-        log.info("회원 인증 완료 - email: {}, id: {}", member.getEmail(), member.getId());
+        log.info("회원 인증 완료 - email: {}, memberId: {}", maskEmail(member.getEmail()), member.getId());
 
         return TokenPayload.from(member);
     }

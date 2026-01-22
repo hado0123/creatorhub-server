@@ -1,8 +1,8 @@
 package com.creatorhub.service;
 
 import com.creatorhub.constant.Role;
-import com.creatorhub.dto.CreatorRequest;
-import com.creatorhub.dto.CreatorResponse;
+import com.creatorhub.dto.creator.CreatorRequest;
+import com.creatorhub.dto.creator.CreatorResponse;
 import com.creatorhub.entity.Creator;
 import com.creatorhub.entity.Member;
 import com.creatorhub.exception.AlreadyCreatorException;

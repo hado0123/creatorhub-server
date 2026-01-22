@@ -1,4 +1,4 @@
-package com.creatorhub.dto;
+package com.creatorhub.dto.creation;
 
 import com.creatorhub.constant.CreationFormat;
 import com.creatorhub.constant.CreationGenre;

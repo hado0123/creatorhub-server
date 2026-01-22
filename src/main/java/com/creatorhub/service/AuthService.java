@@ -1,9 +1,9 @@
 package com.creatorhub.service;
 
 import com.creatorhub.constant.ErrorCode;
-import com.creatorhub.dto.RefreshTokenPayload;
-import com.creatorhub.dto.TokenPair;
-import com.creatorhub.dto.TokenPayload;
+import com.creatorhub.dto.auth.RefreshTokenPayload;
+import com.creatorhub.dto.auth.TokenPair;
+import com.creatorhub.dto.auth.TokenPayload;
 import com.creatorhub.entity.Member;
 import com.creatorhub.exception.MemberNotFoundException;
 import com.creatorhub.repository.MemberRepository;
@@ -39,6 +39,8 @@ public class AuthService {
 
         // 3) Refresh 토큰 Redis 저장
         refreshTokenService.saveRefreshToken(payload.id(), refreshToken);
+
+        log.info("로그인 성공 - memberId={}, role={}", payload.id(), payload.role());
 
         return new TokenPair(accessToken, refreshToken);
     }
@@ -78,6 +80,8 @@ public class AuthService {
         // 5) Redis 갱신 (이전 refresh는 자동 폐기)
         refreshTokenService.saveRefreshToken(id, newRefreshToken);
 
+        log.info("토큰 재발급 성공 - memberId={}", id);
+
         return new TokenPair(newAccessToken, newRefreshToken);
     }
 
@@ -86,5 +90,6 @@ public class AuthService {
      */
     public void logout(Long id) {
         refreshTokenService.deleteRefreshToken(id);
+        log.info("로그아웃 성공 - memberId={}", id);
     }
 }

@@ -1,7 +1,7 @@
 package com.creatorhub.controller;
 
-import com.creatorhub.dto.EpisodeRequest;
-import com.creatorhub.dto.EpisodeResponse;
+import com.creatorhub.dto.episode.EpisodeRequest;
+import com.creatorhub.dto.episode.EpisodeResponse;
 import com.creatorhub.service.EpisodeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

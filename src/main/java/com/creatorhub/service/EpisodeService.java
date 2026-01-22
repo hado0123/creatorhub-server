@@ -1,9 +1,9 @@
 package com.creatorhub.service;
 
 import com.creatorhub.constant.EpisodeThumbnailType;
-import com.creatorhub.dto.EpisodeRequest;
-import com.creatorhub.dto.EpisodeResponse;
-import com.creatorhub.dto.ManuscriptRegisterItem;
+import com.creatorhub.dto.episode.EpisodeRequest;
+import com.creatorhub.dto.episode.EpisodeResponse;
+import com.creatorhub.dto.episode.ManuscriptRegisterItem;
 import com.creatorhub.entity.*;
 import com.creatorhub.repository.*;
 import lombok.RequiredArgsConstructor;

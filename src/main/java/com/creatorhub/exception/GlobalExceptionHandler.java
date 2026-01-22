@@ -1,7 +1,7 @@
 package com.creatorhub.exception;
 
 import com.creatorhub.constant.ErrorCode;
-import com.creatorhub.dto.ErrorResponse;
+import com.creatorhub.dto.error.ErrorResponse;
 import com.creatorhub.security.exception.JwtAuthenticationException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;

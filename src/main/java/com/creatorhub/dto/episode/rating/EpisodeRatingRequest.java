@@ -1,4 +1,4 @@
-package com.creatorhub.dto;
+package com.creatorhub.dto.episode.rating;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

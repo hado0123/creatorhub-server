@@ -1,4 +1,4 @@
-package com.creatorhub.dto;
+package com.creatorhub.dto.creator;
 
 import com.creatorhub.entity.Creator;
 

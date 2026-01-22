@@ -1,4 +1,4 @@
-package com.creatorhub.dto;
+package com.creatorhub.dto.fileUpload;
 
 import com.creatorhub.constant.FileObjectStatus;
 import com.creatorhub.entity.FileObject;
