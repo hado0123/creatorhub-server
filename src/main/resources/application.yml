@@ -11,6 +11,9 @@ spring:
     database-platform: org.hibernate.dialect.MySQLDialect
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
+  web:
+    resources:
+      add-mappings: false # 정적 리소스 서빙 안함
 
 cloud:
   aws:
