@@ -154,9 +154,9 @@ public class FileObjectService {
 
         for (String key : expectedKeys) {
             long sizeBytes = resp.derivedSizeByKey().getOrDefault(key, 0L);
-            long maxSize = 200L * 1024; // 200KB
+            long maxSize = 1L * 1024 * 1024; // 1MB
 
-            // size가 0이면 '없음(업로드 실패)'로 간주
+            // size가 0또는 1MB 초과면 '없음(업로드 실패)'로 간주
             FileObjectStatus status = sizeBytes == 0L || sizeBytes > maxSize?
                     FileObjectStatus.FAILED : FileObjectStatus.READY;
 
