@@ -89,7 +89,7 @@ public class FileUploadController {
                 req.derivedFiles().size()
         );
 
-        List<FileObjectResponse> result = fileObjectService.checkAndGetStatus(req);
+        List<FileObjectResponse> result = fileObjectService.resizeComplete(req);
 
         // SSE send
         String baseKey = req.baseKey();

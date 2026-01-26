@@ -129,7 +129,7 @@ public class FileObjectService {
      * 람다에서 백엔드 콜백시 리사이징 이미지 file_object 테이블에 insert or update
      */
     @Transactional
-    public List<FileObjectResponse> checkAndGetStatus(ResizeCompleteRequest req) {
+    public List<FileObjectResponse> resizeComplete(ResizeCompleteRequest req) {
 
         String baseKey = req.baseKey();
         String originalKey = baseKey + ThumbnailKeys.HORIZONTAL_SUFFIX;
@@ -154,9 +154,11 @@ public class FileObjectService {
 
         for (String key : expectedKeys) {
             long sizeBytes = resp.derivedSizeByKey().getOrDefault(key, 0L);
+            long maxSize = 200L * 1024; // 200KB
 
             // size가 0이면 '없음(업로드 실패)'로 간주
-            FileObjectStatus status = (sizeBytes == 0L) ? FileObjectStatus.FAILED : FileObjectStatus.READY;
+            FileObjectStatus status = sizeBytes == 0L || sizeBytes > maxSize?
+                    FileObjectStatus.FAILED : FileObjectStatus.READY;
 
             FileObject fo = existingMap.get(key);
 
