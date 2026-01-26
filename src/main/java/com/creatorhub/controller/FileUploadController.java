@@ -29,7 +29,7 @@ public class FileUploadController {
      */
     @PreAuthorize("hasRole('ROLE_CREATOR')")
     @PostMapping("/creation-thumbnails/presigned")
-    public ThumbnailPresignedUrlResponse createCreationThumbnailPresignedUrl(@RequestBody CreationThumbnailPresignedRequest req) {
+    public ThumbnailPresignedUrlResponse createCreationThumbnailPresignedUrl(@Valid @RequestBody CreationThumbnailPresignedRequest req) {
         return uploadService.generatePresignedPutUrl(req);
     }
 
@@ -38,7 +38,7 @@ public class FileUploadController {
      */
     @PreAuthorize("hasRole('ROLE_CREATOR')")
     @PostMapping("/episode-thumbnails/presigned")
-    public ThumbnailPresignedUrlResponse createEpisodeThumbnailPresignedUrl(@RequestBody EpisodeThumbnailPresignedRequest req) {
+    public ThumbnailPresignedUrlResponse createEpisodeThumbnailPresignedUrl(@Valid @RequestBody EpisodeThumbnailPresignedRequest req) {
         return uploadService.generatePresignedPutUrl(req);
     }
 
@@ -47,9 +47,7 @@ public class FileUploadController {
      */
     @PreAuthorize("hasRole('ROLE_CREATOR')")
     @PostMapping("/manuscripts/presigned")
-    public ManuscriptPresignedResponse createManuscriptPresignedUrls(
-            @Valid @RequestBody ManuscriptPresignedRequest req
-    ) {
+    public ManuscriptPresignedResponse createManuscriptPresignedUrls(@Valid @RequestBody ManuscriptPresignedRequest req) {
         return uploadService.generateManuscriptPresignedUrls(req);
     }
 
@@ -67,7 +65,7 @@ public class FileUploadController {
      */
     @PreAuthorize("hasRole('ROLE_CREATOR')")
     @PostMapping("/manuscripts/ready")
-    public void markManuscriptsReady(@RequestBody @Valid ManuscriptReadyRequest req) {
+    public void markManuscriptsReady(@Valid @RequestBody ManuscriptReadyRequest req) {
         fileObjectService.markManuscriptsReady(req.fileObjectIds());
     }
 

@@ -48,7 +48,7 @@ public class S3PresignedUploadService {
                 req.originalFilename(),
                 FileObjectStatus.INIT,
                 req.contentType(),
-                0L
+                req.sizeBytes()
         );
         fileObjectRepository.save(fo);
 
@@ -101,7 +101,7 @@ public class S3PresignedUploadService {
                     fileReq.originalFilename(),
                     FileObjectStatus.INIT,
                     fileReq.contentType(),
-                    0L
+                    fileReq.sizeBytes()
             );
 
             toSave.add(fo);
