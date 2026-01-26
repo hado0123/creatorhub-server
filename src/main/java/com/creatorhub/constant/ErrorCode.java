@@ -40,6 +40,9 @@ public enum ErrorCode {
     FILE_STATUS_NOT_CORRECT(HttpStatus.CONFLICT, "F002", "파일의 상태가 일치하지 않거나 올바르지 못합니다."),
     FILE_SIZE_EXCEEDED(HttpStatus.PAYLOAD_TOO_LARGE, "F003", "파일의 사이즈가 제한 용량을 초과했습니다."),
 
+    // s3 관련 에러
+    PRESIGNED_URL_ISSUE(HttpStatus.BAD_GATEWAY, "P001", "Presigned URL 발급에 실패했습니다."),
+
     // 기타 에러
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "E001", "잘못된 형식입니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E002", "서버 오류가 발생했습니다."),
