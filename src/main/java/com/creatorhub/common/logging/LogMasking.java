@@ -21,4 +21,13 @@ public final class LogMasking {
         int keep = 2;
         return local.substring(0, keep) + "***@" + domain;
     }
+
+    /**
+     * s3 storage key 마스킹
+     */
+    public static String maskStoragekey(String s) {
+        if (s == null) return null;
+        return s.length() <= 16 ? s : s.substring(s.length() - 16);
+    }
+
 }

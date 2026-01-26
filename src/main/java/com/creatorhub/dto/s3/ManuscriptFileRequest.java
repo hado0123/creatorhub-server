@@ -1,9 +1,6 @@
 package com.creatorhub.dto.s3;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 
 public record ManuscriptFileRequest (
         @NotNull(message = "displayOrder가 존재하지 않습니다.")
@@ -18,5 +15,6 @@ public record ManuscriptFileRequest (
 
         @NotNull(message = "원고 파일 사이즈가 존재하지 않습니다.")
         @Positive(message = "원고 파일 사이즈는 1byte 이상이어야 합니다.")
+        @Max(value = 5 *1024 * 1024, message = "원고 파일 사이즈는 1개당 5MB 이하여야 합니다.")
         Long sizeBytes
 ){ }

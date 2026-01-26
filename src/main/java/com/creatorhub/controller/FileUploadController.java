@@ -1,7 +1,9 @@
 package com.creatorhub.controller;
 
 import com.creatorhub.common.sse.SseEmitters;
+import com.creatorhub.dto.fileUpload.ManuscriptsMarkResult;
 import com.creatorhub.dto.fileUpload.FileObjectResponse;
+import com.creatorhub.dto.fileUpload.ThumbnailMarkResult;
 import com.creatorhub.dto.s3.*;
 import com.creatorhub.service.FileObjectService;
 import com.creatorhub.service.s3.S3PresignedUploadService;
@@ -56,8 +58,11 @@ public class FileUploadController {
      */
     @PreAuthorize("hasRole('ROLE_CREATOR')")
     @PostMapping("/{fileObjectId}/thumbnails/ready")
-    public void markThumbnailReady(@PathVariable Long fileObjectId) {
-        fileObjectService.markThumbnailReady(fileObjectId);
+    public ResponseEntity<ThumbnailMarkResult> markThumbnailReady(@PathVariable Long fileObjectId) {
+        ThumbnailMarkResult thumbnailMarkResult
+                = fileObjectService.markThumbnailReady(fileObjectId);
+
+        return ResponseEntity.ok(thumbnailMarkResult);
     }
 
     /**
@@ -65,8 +70,11 @@ public class FileUploadController {
      */
     @PreAuthorize("hasRole('ROLE_CREATOR')")
     @PostMapping("/manuscripts/ready")
-    public void markManuscriptsReady(@Valid @RequestBody ManuscriptReadyRequest req) {
-        fileObjectService.markManuscriptsReady(req.fileObjectIds());
+    public ResponseEntity<ManuscriptsMarkResult> markManuscriptsReady(@Valid @RequestBody ManuscriptReadyRequest req) {
+        ManuscriptsMarkResult manuscriptsMarkResult
+                = fileObjectService.markManuscriptsReady(req.fileObjectIds());
+
+        return ResponseEntity.ok(manuscriptsMarkResult);
     }
 
     /**
