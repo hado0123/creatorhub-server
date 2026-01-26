@@ -8,6 +8,7 @@ import com.creatorhub.exception.episode.EpisodeException;
 import com.creatorhub.exception.fileUpload.FileObjectException;
 import com.creatorhub.exception.member.MemberException;
 import com.creatorhub.exception.auth.JwtAuthenticationException;
+import com.creatorhub.exception.s3.PresignedUrlIssueException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -157,6 +158,22 @@ public class GlobalExceptionHandler {
 
         ErrorResponse errorResponse =
                 ErrorResponse.of(ex.getErrorCode(), request.getRequestURI());
+
+        return ResponseEntity
+                .status(ex.getErrorCode().getHttpStatus())
+                .body(errorResponse);
+    }
+
+    /**
+     * PresignedUrl 관련 예외처리
+     */
+    @ExceptionHandler(PresignedUrlIssueException.class)
+    public ResponseEntity<ErrorResponse> handlePresignedUrlIssueException(
+            PresignedUrlIssueException ex,
+            HttpServletRequest request) {
+
+        log.error("PresignedUrlIssueException occurred - Message: {}", ex.getMessage(), ex);
+        ErrorResponse errorResponse = ErrorResponse.of(ex.getErrorCode(), request.getRequestURI());
 
         return ResponseEntity
                 .status(ex.getErrorCode().getHttpStatus())

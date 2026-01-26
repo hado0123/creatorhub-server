@@ -69,7 +69,6 @@ public class S3PresignedUploadService {
                 storageKey
             );
         } catch (Exception e) {
-            log.error("Presigned PUT URL 발급 실패 - storageKey={}", maskStoragekey(storageKey), e);
             throw new PresignedUrlIssueException("Presigned PUT URL 발급 실패 - storageKey=" + maskStoragekey(storageKey));
         }
     }

@@ -1,7 +1,9 @@
 package com.creatorhub.exception.s3;
 
 import com.creatorhub.constant.ErrorCode;
+import lombok.Getter;
 
+@Getter
 public class PresignedUrlIssueException  extends RuntimeException {
     private final ErrorCode errorCode;
 
