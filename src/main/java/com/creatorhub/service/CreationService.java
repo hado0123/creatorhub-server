@@ -51,8 +51,6 @@ public class CreationService {
         FileObject horizontalOriginal = fileObjectRepository.findById(req.horizontalOriginalFileObjectId())
                 .orElseThrow(() -> new FileObjectNotFoundException("가로형 FileObject를 찾을 수 없습니다:" + req.horizontalOriginalFileObjectId()));
 
-        log.info("horizontalOriginal 데이터 조회 결과- horizontalOriginalFileObjectId: {}, horizontalOriginal: {}", req.horizontalOriginalFileObjectId(), horizontalOriginal);
-
         // (선택) 상태 검증: READY 아니면 등록 막기
         if (horizontalOriginal.getStatus() != FileObjectStatus.READY) {
             throw new FileObjectStatusException("가로형 썸네일이 READY 상태가 아닙니다. status: " + horizontalOriginal.getStatus());

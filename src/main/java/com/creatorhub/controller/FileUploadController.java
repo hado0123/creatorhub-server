@@ -9,11 +9,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+
 
 @RestController
 @RequestMapping("/api/files")
@@ -28,48 +27,36 @@ public class FileUploadController {
     /**
      * 작품 썸네일 presigned url 요청
      */
+    @PreAuthorize("hasRole('ROLE_CREATOR')")
     @PostMapping("/creation-thumbnails/presigned")
     public ThumbnailPresignedUrlResponse createCreationThumbnailPresignedUrl(@RequestBody CreationThumbnailPresignedRequest req) {
-        log.info("작품 썸네일 Presigned PUT 요청 - contentType={}, thumbnailType={}, originalFilename={}",
-                req.contentType(), req.thumbnailType(), req.originalFilename());
-
         return uploadService.generatePresignedPutUrl(req);
     }
 
     /**
      * 회차 썸네일 presigned url 요청
      */
+    @PreAuthorize("hasRole('ROLE_CREATOR')")
     @PostMapping("/episode-thumbnails/presigned")
     public ThumbnailPresignedUrlResponse createEpisodeThumbnailPresignedUrl(@RequestBody EpisodeThumbnailPresignedRequest req) {
-        log.info("회차 썸네일 Presigned PUT 요청 - contentType={}, thumbnailType={}, originalFilename={}",
-                req.contentType(), req.thumbnailType(), req.originalFilename());
-
         return uploadService.generatePresignedPutUrl(req);
     }
 
     /**
      * 원고 presigned url 요청
      */
+    @PreAuthorize("hasRole('ROLE_CREATOR')")
     @PostMapping("/manuscripts/presigned")
     public ManuscriptPresignedResponse createManuscriptPresignedUrls(
             @Valid @RequestBody ManuscriptPresignedRequest req
     ) {
-        // contentType 요약
-        Map<String, Long> contentTypeSummary = req.files().stream()
-                .collect(Collectors.groupingBy(
-                        ManuscriptFileRequest::contentType,
-                        Collectors.counting()
-                ));
-
-        log.info("원고 Presigned PUT 요청 - creationId={}, count={}, contentTypes={}",
-                req.creationId(), req.files().size(), contentTypeSummary);
-
         return uploadService.generateManuscriptPresignedUrls(req);
     }
 
     /**
      * fileObject 썸네일 이미지 상태 변경(INIT -> READY)
      */
+    @PreAuthorize("hasRole('ROLE_CREATOR')")
     @PostMapping("/{fileObjectId}/thumbnails/ready")
     public void markThumbnailReady(@PathVariable Long fileObjectId) {
         fileObjectService.markThumbnailReady(fileObjectId);
@@ -78,22 +65,14 @@ public class FileUploadController {
     /**
      * fileObject 원고 이미지 상태 변경(INIT -> READY)
      */
+    @PreAuthorize("hasRole('ROLE_CREATOR')")
     @PostMapping("/manuscripts/ready")
     public void markManuscriptsReady(@RequestBody @Valid ManuscriptReadyRequest req) {
         fileObjectService.markManuscriptsReady(req.fileObjectIds());
     }
 
-
     /**
-     * fileObject 작품등록시 가로 리사이징 이미지 업로드 상태 확인(폴링용) & file_object insert
-     */
-    @GetMapping("/{fileObjectId}/status")
-    public List<FileObjectResponse> getStatus(@PathVariable Long fileObjectId) {
-        return fileObjectService.checkAndGetStatus(fileObjectId);
-    }
-
-    /**
-     * fileObject 작품등록시 가로 리사이징 이미지 업로드 상태 확인(폴링용) & file_object insert
+     * fileObject 작품등록시 리사이징 이미지 콜백용 & file_object insert
      */
     @PostMapping("/resize-complete")
     public ResponseEntity<Void> resizeComplete(@Valid @RequestBody ResizeCompleteRequest req) {
