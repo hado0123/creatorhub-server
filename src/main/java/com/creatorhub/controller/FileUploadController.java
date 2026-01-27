@@ -78,6 +78,16 @@ public class FileUploadController {
     }
 
     /**
+     * fileObject 이미지 상태 변경(INIT -> FAILED)
+     */
+    @PreAuthorize("hasRole('ROLE_CREATOR')")
+    @PostMapping("/{fileObjectId}/failed")
+    public ResponseEntity<Void> markManuscriptsReady(@PathVariable Long fileObjectId) {
+        fileObjectService.markFailed(fileObjectId);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * fileObject 작품등록시 리사이징 이미지 콜백용 & file_object insert
      */
     @PostMapping("/resize-complete")
