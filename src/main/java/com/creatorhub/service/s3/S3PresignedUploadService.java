@@ -9,6 +9,7 @@ import com.creatorhub.repository.FileObjectRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
@@ -37,6 +38,12 @@ public class S3PresignedUploadService {
         this.bucket = bucket;
     }
 
+    /**
+     * presigned에서 예외 발생시 DB 저장도 같이 롤백
+     * presigned url 발급 재시도시 중복 row insert 방지
+     * (storage_key 컬럼에 unique 적용)
+     */
+    @Transactional
     public ThumbnailPresignedUrlResponse generatePresignedPutUrl(PresignedPutRequest req) {
 
         // 1. contentType 검증 (지금은 jpeg 고정 정책)
@@ -53,7 +60,7 @@ public class S3PresignedUploadService {
                 req.contentType(),
                 0L
         );
-        fileObjectRepository.save(fo);
+        FileObject saved = fileObjectRepository.save(fo);
 
         // 4. presigned 발급
         try {
@@ -64,9 +71,9 @@ public class S3PresignedUploadService {
 
             // 5. 응답에 fileObjectId 포함
             return new ThumbnailPresignedUrlResponse(
-                fo.getId(),
-                presigned.url().toString(),
-                storageKey
+                    saved.getId(),
+                    presigned.url().toString(),
+                    storageKey
             );
         } catch (Exception e) {
             throw new PresignedUrlIssueException("Presigned PUT URL 발급 실패 - storageKey=" + maskStoragekey(storageKey));

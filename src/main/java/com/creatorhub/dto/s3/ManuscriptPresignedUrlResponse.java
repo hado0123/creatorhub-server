@@ -1,7 +1,7 @@
 package com.creatorhub.dto.s3;
 
 public record ManuscriptPresignedUrlResponse(
-        int order,
+        int displayOrder,
         Long fileObjectId,
         String presignedUrl,
         String storageKey
