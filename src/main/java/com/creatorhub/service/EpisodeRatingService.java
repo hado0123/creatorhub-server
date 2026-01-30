@@ -51,8 +51,8 @@ public class EpisodeRatingService {
                 .orElseThrow(EpisodeNotFoundException::new);
 
         Integer count = latest.getRatingCount() == null ? 0 : latest.getRatingCount();
-        BigDecimal avg = latest.getRatingAverage() == null ? BigDecimal.ZERO : latest.getRatingAverage();
+        BigDecimal average = latest.getRatingAverage() == null ? BigDecimal.ZERO : latest.getRatingAverage();
 
-        return EpisodeRatingResponse.of(episodeId, score, count, avg);
+        return EpisodeRatingResponse.of(episodeId, score, count, average);
     }
 }
