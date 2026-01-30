@@ -50,7 +50,7 @@ public class Episode extends BaseEntity {
     private boolean isPublic;
 
     @Column
-    private Integer likeCount = 0;
+    private Integer likeCount;
 
     @Column
     private Integer favoriteCount;
