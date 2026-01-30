@@ -1,12 +1,10 @@
 package com.creatorhub.controller;
 
 
-import com.creatorhub.dto.CreationFavoriteRequest;
 import com.creatorhub.dto.CreationFavoriteResponse;
 import com.creatorhub.dto.FavoriteCreationItem;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.service.CreationFavoriteService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,13 +21,13 @@ public class CreationFavoriteController {
     /**
      * 관심 등록
      */
-    @PostMapping("/favorites")
-    public ResponseEntity<CreationFavoriteResponse> addFavorite(
+    @PostMapping("/{creationId}/favorite")
+    public ResponseEntity<CreationFavoriteResponse> favorite(
             @AuthenticationPrincipal CustomUserPrincipal principal,
-            @Valid @RequestBody CreationFavoriteRequest req
+            @PathVariable Long creationId
     ) {
         CreationFavoriteResponse creationFavoriteResponse =
-                creationFavoriteService.addFavorite(principal.id(), req.creationId());
+                creationFavoriteService.favorite(principal.id(), creationId);
 
         return ResponseEntity.ok(creationFavoriteResponse);
     }
@@ -37,13 +35,13 @@ public class CreationFavoriteController {
     /**
      * 관심 해제
      */
-    @DeleteMapping("/favorites/{creationId}")
-    public ResponseEntity<CreationFavoriteResponse> removeFavorite(
+    @DeleteMapping("/{creationId}/favorite")
+    public ResponseEntity<CreationFavoriteResponse> unfavorite(
             @AuthenticationPrincipal CustomUserPrincipal principal,
             @PathVariable Long creationId
     ) {
         CreationFavoriteResponse creationFavoriteResponse =
-                creationFavoriteService.removeFavorite(principal.id(), creationId);
+                creationFavoriteService.unfavorite(principal.id(), creationId);
 
         return ResponseEntity.ok(creationFavoriteResponse);
     }
@@ -51,7 +49,7 @@ public class CreationFavoriteController {
     /**
      * 내 관심작품 목록
      */
-    @GetMapping("/me")
+    @GetMapping("/me/favorites")
     public ResponseEntity<Page<FavoriteCreationItem>> myFavorites(
             @AuthenticationPrincipal CustomUserPrincipal principal,
             Pageable pageable

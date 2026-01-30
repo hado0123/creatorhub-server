@@ -33,7 +33,7 @@ public class CreationFavoriteService {
      * 관심 등록
      */
     @Transactional
-    public CreationFavoriteResponse addFavorite(Long memberId, Long creationId) {
+    public CreationFavoriteResponse favorite(Long memberId, Long creationId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(MemberNotFoundException::new);
 
@@ -74,7 +74,7 @@ public class CreationFavoriteService {
      * 관심 해제
      */
     @Transactional
-    public CreationFavoriteResponse removeFavorite(Long memberId, Long creationId) {
+    public CreationFavoriteResponse unfavorite(Long memberId, Long creationId) {
         CreationFavorite favorite = creationFavoriteRepository.findByMemberIdAndCreationId(memberId, creationId)
                 .orElseThrow(CreationFavoriteNotFoundException::new);
 
