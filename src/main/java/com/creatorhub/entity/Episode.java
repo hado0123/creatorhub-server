@@ -87,7 +87,7 @@ public class Episode extends BaseEntity {
         this.favoriteCount = 0;
         this.ratingSum = 0;
         this.ratingCount = 0;
-        this.ratingAverage = new BigDecimal(0);
+        this.ratingAverage = BigDecimal.ZERO;
     }
 
     public static Episode create(Creation creation,
@@ -105,15 +105,6 @@ public class Episode extends BaseEntity {
                 .isPublic(isPublic != null && isPublic)
                 .build();
     }
-
-    public void publish() { this.isPublic = true; }
-    public void unpublish() { this.isPublic = false; }
-
-    public void enableComments() { this.isCommentEnabled = true; }
-    public void disableComments() { this.isCommentEnabled = false; }
-
-    public void changeTitle(String title) { this.title = title; }
-    public void changeCreatorNote(String note) { this.creatorNote = note; }
 
     public void addManuscriptImage(ManuscriptImage image) {
         this.manuscriptImages.add(image);

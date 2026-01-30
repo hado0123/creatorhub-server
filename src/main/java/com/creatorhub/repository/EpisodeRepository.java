@@ -23,7 +23,7 @@ public interface EpisodeRepository extends JpaRepository<Episode, Long> {
     void updateLikeCountSafely(@Param("episodeId") Long episodeId,
                               @Param("delta") int delta);
 
-    // 별점 최초 등록: sum += score, count += 1, avg = sum/count
+    // 별점 최초 등록: sum += score, count += 1, Average = sum/count
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         UPDATE Episode e
