@@ -16,20 +16,20 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/creations/favorites")
+@RequestMapping("/api/creations")
 public class CreationFavoriteController {
     private final CreationFavoriteService creationFavoriteService;
 
     /**
      * 관심 등록
      */
-    @PostMapping("/create")
-    public ResponseEntity<CreationFavoriteResponse> favorite(
+    @PostMapping("/favorites")
+    public ResponseEntity<CreationFavoriteResponse> addFavorite(
             @AuthenticationPrincipal CustomUserPrincipal principal,
             @Valid @RequestBody CreationFavoriteRequest req
     ) {
         CreationFavoriteResponse creationFavoriteResponse =
-                creationFavoriteService.favorite(principal.id(), req.creationId());
+                creationFavoriteService.addFavorite(principal.id(), req.creationId());
 
         return ResponseEntity.ok(creationFavoriteResponse);
     }
@@ -37,13 +37,13 @@ public class CreationFavoriteController {
     /**
      * 관심 해제
      */
-    @DeleteMapping("/delete/{creationId}")
-    public ResponseEntity<CreationFavoriteResponse> unfavorite(
+    @DeleteMapping("/favorites/{creationId}")
+    public ResponseEntity<CreationFavoriteResponse> removeFavorite(
             @AuthenticationPrincipal CustomUserPrincipal principal,
             @PathVariable Long creationId
     ) {
         CreationFavoriteResponse creationFavoriteResponse =
-                creationFavoriteService.unfavorite(principal.id(), creationId);
+                creationFavoriteService.removeFavorite(principal.id(), creationId);
 
         return ResponseEntity.ok(creationFavoriteResponse);
     }
