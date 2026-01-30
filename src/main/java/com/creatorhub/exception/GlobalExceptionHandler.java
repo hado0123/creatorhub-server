@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Creator 관련 예외 처리
+     * Creation 관련 예외 처리
      */
     @ExceptionHandler(CreationException.class)
     public ResponseEntity<ErrorResponse> handleCreationException(

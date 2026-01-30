@@ -22,5 +22,7 @@ public interface CreationRepository extends JpaRepository<Creation, Long> {
     """)
     void updateFavoriteCountSafely(@Param("creationId") Long creationId,
                                   @Param("delta") int delta);
+
+    int findFavoriteCount(Long creationId);
 }
 
