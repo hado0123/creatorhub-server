@@ -50,7 +50,7 @@ public class Creation extends BaseEntity {
     private boolean isPublic;
 
     @Column
-    private Integer favoriteCount = 0;
+    private Integer favoriteCount;
 
     // 연재요일은 자주 바뀌지 않으므로 별도의 엔티티가 아닌 @ElementCollection사용
     @ElementCollection(fetch = FetchType.LAZY)
