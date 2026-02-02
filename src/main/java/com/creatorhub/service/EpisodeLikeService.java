@@ -4,14 +4,13 @@ import com.creatorhub.dto.EpisodeLikeResponse;
 import com.creatorhub.entity.Episode;
 import com.creatorhub.entity.EpisodeLike;
 import com.creatorhub.entity.Member;
-import com.creatorhub.exception.AlreadyEpisodeLikeException;
-import com.creatorhub.exception.EpisodeLikeNotFoundException;
 import com.creatorhub.exception.EpisodeNotFoundException;
 import com.creatorhub.exception.MemberNotFoundException;
 import com.creatorhub.repository.EpisodeLikeRepository;
 import com.creatorhub.repository.EpisodeRepository;
 import com.creatorhub.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +21,9 @@ public class EpisodeLikeService {
     private final EpisodeRepository episodeRepository;
     private final MemberRepository memberRepository;
 
+    /**
+     * (회차별) 좋아요
+     */
     @Transactional
     public EpisodeLikeResponse like(Long memberId, Long episodeId) {
         Member member = memberRepository.findById(memberId)
@@ -30,35 +32,32 @@ public class EpisodeLikeService {
         Episode episode = episodeRepository.findById(episodeId)
                 .orElseThrow(EpisodeNotFoundException::new);
 
-        // 이미 좋아요
-        if (episodeLikeRepository.existsByMemberIdAndEpisodeId(memberId, episodeId)) {
-            throw new AlreadyEpisodeLikeException();
+        // 유니크 + 예외로 멱등 처리
+        try {
+            // flush로 insert를 즉시 실행해 유니크(중복) 실패를 여기서 확정
+            episodeLikeRepository.saveAndFlush(EpisodeLike.like(member, episode));
+        } catch (DataIntegrityViolationException e) {
+            return EpisodeLikeResponse.of(episodeId, true);
         }
 
-        episodeLikeRepository.save(EpisodeLike.like(member, episode));
+        episodeRepository.updateLikeCount(episodeId, 1);
 
-        episodeRepository.updateLikeCountSafely(episodeId, +1);
-
-        Integer newCount = episodeRepository.findById(episodeId)
-                .map(ep -> ep.getLikeCount() == null ? 0 : ep.getLikeCount())
-                .orElse(0);
-
-        return EpisodeLikeResponse.of(episodeId, newCount, true);
+        return EpisodeLikeResponse.of(episodeId, true);
     }
 
+    /**
+     * (회차별) 좋아요 해제
+     */
     @Transactional
     public EpisodeLikeResponse unlike(Long memberId, Long episodeId) {
-        EpisodeLike like = episodeLikeRepository.findByMemberIdAndEpisodeId(memberId, episodeId)
-                .orElseThrow(EpisodeLikeNotFoundException::new);
+        // delete row count 기반 멱등 처리 (동시성에서도 count 정합성 보장)
+        int deleted = episodeLikeRepository
+                .deleteByMemberIdAndEpisodeId(memberId, episodeId);
 
-        episodeLikeRepository.delete(like);
+        if (deleted > 0) {
+            episodeRepository.updateLikeCount(episodeId, -1);
+        }
 
-        episodeRepository.updateLikeCountSafely(episodeId, -1);
-
-        Integer newCount = episodeRepository.findById(episodeId)
-                .map(ep -> ep.getLikeCount() == null ? 0 : ep.getLikeCount())
-                .orElse(0);
-
-        return EpisodeLikeResponse.of(episodeId, newCount, false);
+        return EpisodeLikeResponse.of(episodeId, false);
     }
 }
