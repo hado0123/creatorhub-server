@@ -1,6 +1,7 @@
 package com.creatorhub.controller;
 
 import com.creatorhub.common.sse.SseEmitters;
+import com.creatorhub.constant.SseEventType;
 import com.creatorhub.dto.FileObjectResponse;
 import com.creatorhub.dto.s3.*;
 import com.creatorhub.service.FileObjectService;
@@ -109,7 +110,7 @@ public class FileUploadController {
         // SSE send
         String baseKey = req.baseKey();
         if (baseKey != null && !baseKey.isBlank()) {
-            sseEmitters.send(baseKey, "resize-complete", result);
+            sseEmitters.send(baseKey, SseEventType.RESIZE_COMPLETE, result);
         }
 
         return ResponseEntity.ok().build();

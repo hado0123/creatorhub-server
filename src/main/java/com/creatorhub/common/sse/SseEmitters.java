@@ -1,4 +1,5 @@
 package com.creatorhub.common.sse;
+import com.creatorhub.constant.SseEventType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -26,16 +27,16 @@ public class SseEmitters {
         return emitter;
     }
 
-    public void send(String baseKey, String eventName, Object data) {
+    public void send(String baseKey, SseEventType sseEventType, Object data) {
         List<SseEmitter> list = emitters.get(baseKey);
         if (list == null || list.isEmpty()) return;
 
         log.info("SSE send - baseKey={}, event={}, subscribers={}",
-                baseKey, eventName, list.size());
+                baseKey, sseEventType, list.size());
 
         for (SseEmitter emitter : list) {
             try {
-                emitter.send(SseEmitter.event().name(eventName).data(data));
+                emitter.send(SseEmitter.event().name(String.valueOf(sseEventType)).data(data));
             } catch (IOException ex) {
                 remove(baseKey, emitter);
             }
