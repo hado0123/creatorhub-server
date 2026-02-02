@@ -14,8 +14,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Slf4j
 public class SseEmitters {
 
+    // 같은 baseKey 작업을 기다리는 SSE 연결이 웹 특성상 여러 개 동시에 생길 수 있으므로
+    // 완료 이벤트를 모든 연결에 보내기 위해 List를 사용
     private final Map<String, List<SseEmitter>> emitters = new ConcurrentHashMap<>();
 
+    // baseKey: 원본 storeKey의 SUFFIX를 제외한 original 값
+    // ex) upload/2026/01/14/5801402b-13b6-424e-bbb6-6ba9dfce4942
     public SseEmitter add(String baseKey) {
         SseEmitter emitter = new SseEmitter(10L * 60 * 1000); // 10분
         emitters.computeIfAbsent(baseKey, k -> new CopyOnWriteArrayList<>()).add(emitter);
