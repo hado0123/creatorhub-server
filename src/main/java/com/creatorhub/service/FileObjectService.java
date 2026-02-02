@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.unit.DataSize;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,6 +30,12 @@ public class FileObjectService {
     private final FileObjectRepository fileObjectRepository;
     private final ImageProcessingChecker checker;
 
+    @Value("${file.max.thumbnail-size}")
+    private DataSize thumbnailSize;
+
+    @Value("${file.max.manuscript-size}")
+    private DataSize manuscriptSize;
+
     /**
      * 썸네일 status 변경(Ready), 사이즈 insert
      */
@@ -37,7 +45,7 @@ public class FileObjectService {
                 .orElseThrow(() -> new FileObjectNotFoundException("해당 FileObject를 찾을 수 없습니다: " + fileObjectId));
 
         long size = checker.fetchSize(fo.getStorageKey());
-        long maxSize = 1L * 1024 * 1024;
+        long maxSize = thumbnailSize.toBytes();
 
         // 썸네일 이미지 사이즈가 1MB 초과시
         if (size > maxSize) {
@@ -77,7 +85,7 @@ public class FileObjectService {
             throw new FileObjectNotFoundException("해당 FileObject를 찾을 수 없습니다: " + missing);
         }
 
-        long max = 5L * 1024 * 1024;
+        long max = manuscriptSize.toBytes();
         List<ManuscriptsMarkResult.FailedItem> failed = new ArrayList<>();
 
         // 4. 상태/사이즈 처리
@@ -154,7 +162,7 @@ public class FileObjectService {
 
         for (String key : expectedKeys) {
             long sizeBytes = resp.derivedSizeByKey().getOrDefault(key, 0L);
-            long maxSize = 1L * 1024 * 1024; // 1MB
+            long maxSize = thumbnailSize.toBytes(); // 1MB
 
             // size가 0또는 1MB 초과면 '없음(업로드 실패)'로 간주
             FileObjectStatus status = sizeBytes == 0L || sizeBytes > maxSize?
