@@ -32,14 +32,14 @@ public class JWTCheckFilter extends OncePerRequestFilter {
     private final AuthenticationEntryPoint authenticationEntryPoint;
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
 
         // 토큰 없이 접근 허용할 경로들
         return path.equals("/api/auth/login")          // 로그인
                 || path.equals("/api/auth/refresh")    // 토큰 재발급
                 || path.equals("/api/members/signup") // 회원가입
-                || path.equals("//api/files/resize-complete"); // 이미지 리사이즈 완료 콜백
+                || path.equals("/api/files/resize-complete"); // 이미지 리사이즈 완료 콜백
     }
 
     @Override
