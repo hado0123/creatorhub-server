@@ -88,6 +88,16 @@ function truncate(str, max = 8000) {
 async function safeNotifyBackend(payload) {
     if (!BACKEND_CALLBACK_URL) return { ok: true }
 
+    // 서명 검증
+    if (!CALLBACK_SECRET) {
+        console.error('CALLBACK_SECRET가 존해하지 않습니다. 백엔드 콜백을 실행하지 않습니다.')
+        return {
+            ok: false,
+            errorName: 'MissingCallbackSecret',
+            errorMessage: 'CALLBACK_SECRET is missing'
+        }
+    }
+
     const bodyStr = JSON.stringify(payload)
     const timestamp = Date.now().toString()
     const canonical = `${timestamp}.${bodyStr}`
