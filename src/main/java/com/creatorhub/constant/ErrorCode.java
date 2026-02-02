@@ -17,7 +17,14 @@ public enum ErrorCode {
     // Creation 관련 에러
     ALREADY_CREATION(HttpStatus.CONFLICT, "C001", "이미 존재하는 작품입니다."),
     CREATION_NOT_FOUND(HttpStatus.NOT_FOUND, "C002", "존재하는 않는 작품입니다."),
-    CREATION_FAVORITE_NOT_FOUND(HttpStatus.NOT_FOUND, "C003", "관심 작품으로 등록되어있지 않습니다."),
+    ALREADY_CREATION_FAVORITE(HttpStatus.CONFLICT, "C003", "이미 관심작품으로 등록한 작품입니다."),
+    CREATION_FAVORITE_NOT_FOUND(HttpStatus.NOT_FOUND, "C004", "관심 작품으로 등록되어있지 않습니다."),
+
+    // Episode 관련 에러
+    ALREADY_EPISODE(HttpStatus.CONFLICT, "E001", "이미 존재하는 회차입니다."),
+    EPISODE_NOT_FOUND(HttpStatus.NOT_FOUND, "E002", "존재하는 않는 회차입니다."),
+    ALREADY_EPISODE_LIKE(HttpStatus.CONFLICT, "E003", "이미 '좋아요'한 회차입니다."),
+    EPISODE_LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "E004", "'좋아요'를 하지 않은 회차입니다."),
 
     // Authorization 관련 에러
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "A001", "접근이 제한되었습니다."),

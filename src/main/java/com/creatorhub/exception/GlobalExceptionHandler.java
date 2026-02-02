@@ -70,6 +70,24 @@ public class GlobalExceptionHandler {
                 .body(errorResponse);
     }
 
+    /**
+     * Episode 관련 예외 처리
+     */
+    @ExceptionHandler(EpisodeException.class)
+    public ResponseEntity<ErrorResponse> handleEpisodeException(
+            EpisodeException ex,
+            HttpServletRequest request) {
+
+        log.warn("EpisodeException occurred - Message: {}", ex.getMessage());
+
+        ErrorResponse errorResponse =
+                ErrorResponse.of(ex.getErrorCode(), request.getRequestURI());
+
+        return ResponseEntity
+                .status(ex.getErrorCode().getHttpStatus())
+                .body(errorResponse);
+    }
+
 
     /**
      * 요청 데이터 검증 오류 처리 (@Valid 실패)

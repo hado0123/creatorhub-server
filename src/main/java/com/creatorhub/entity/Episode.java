@@ -98,15 +98,6 @@ public class Episode extends BaseEntity {
                 .build();
     }
 
-    public void publish() { this.isPublic = true; }
-    public void unpublish() { this.isPublic = false; }
-
-    public void enableComments() { this.isCommentEnabled = true; }
-    public void disableComments() { this.isCommentEnabled = false; }
-
-    public void changeTitle(String title) { this.title = title; }
-    public void changeCreatorNote(String note) { this.creatorNote = note; }
-
     public void addManuscriptImage(ManuscriptImage image) {
         this.manuscriptImages.add(image);
         image.changeEpisode(this);
