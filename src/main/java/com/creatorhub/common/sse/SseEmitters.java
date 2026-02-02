@@ -16,7 +16,7 @@ public class SseEmitters {
     private final Map<String, List<SseEmitter>> emitters = new ConcurrentHashMap<>();
 
     public SseEmitter add(String baseKey) {
-        SseEmitter emitter = new SseEmitter(60L * 60 * 1000); // 1시간
+        SseEmitter emitter = new SseEmitter(10L * 60 * 1000); // 10분
         emitters.computeIfAbsent(baseKey, k -> new CopyOnWriteArrayList<>()).add(emitter);
 
         emitter.onCompletion(() -> remove(baseKey, emitter));
