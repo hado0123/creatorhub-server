@@ -36,7 +36,7 @@ public enum ErrorCode {
     AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "A006", "토큰 인증에 실패했습니다."),
 
     // FileObject 관련 에러
-    FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "F001", "존재하는 파일입니다."),
+    FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "F001", "존재하지 않는 파일입니다."),
     FILE_STATUS_NOT_CORRECT(HttpStatus.CONFLICT, "F002", "파일의 상태가 일치하지 않거나 올바르지 못합니다."),
     FILE_SIZE_EXCEEDED(HttpStatus.PAYLOAD_TOO_LARGE, "F003", "파일의 사이즈가 제한 용량을 초과했습니다."),
 
