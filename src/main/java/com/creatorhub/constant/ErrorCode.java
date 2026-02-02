@@ -25,6 +25,7 @@ public enum ErrorCode {
     EPISODE_NOT_FOUND(HttpStatus.NOT_FOUND, "E002", "존재하는 않는 회차입니다."),
     ALREADY_EPISODE_LIKE(HttpStatus.CONFLICT, "E003", "이미 '좋아요'한 회차입니다."),
     EPISODE_LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "E004", "'좋아요'를 하지 않은 회차입니다."),
+    ALREADY_EPISODE_RATING(HttpStatus.CONFLICT, "E005", "이미 별점을 준 회차입니다."),
 
     // Authorization 관련 에러
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "A001", "접근이 제한되었습니다."),

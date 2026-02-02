@@ -55,7 +55,13 @@ public class Episode extends BaseEntity {
     @Column
     private Integer favoriteCount;
 
-    @Column(precision = 3, scale = 2)
+    @Column
+    private Integer ratingSum;
+
+    @Column
+    private Integer ratingCount;
+
+    @Column(precision = 4, scale = 3)
     private BigDecimal ratingAverage;
 
     @OneToMany(mappedBy = "episode", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -79,7 +85,9 @@ public class Episode extends BaseEntity {
         this.isPublic = isPublic;
         this.likeCount = 0;
         this.favoriteCount = 0;
-        this.ratingAverage = new BigDecimal(0);
+        this.ratingSum = 0;
+        this.ratingCount = 0;
+        this.ratingAverage = BigDecimal.ZERO;
     }
 
     public static Episode create(Creation creation,
