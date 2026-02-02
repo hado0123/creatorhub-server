@@ -61,7 +61,7 @@ public class Episode extends BaseEntity {
     @Column
     private Integer ratingCount;
 
-    @Column(precision = 3, scale = 2)
+    @Column(precision = 4, scale = 3)
     private BigDecimal ratingAverage;
 
     @OneToMany(mappedBy = "episode", cascade = CascadeType.ALL, orphanRemoval = true)
