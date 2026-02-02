@@ -49,6 +49,9 @@ public class Creation extends BaseEntity {
     @Column(nullable = false)
     private boolean isPublic;
 
+    @Column
+    private Integer favoriteCount;
+
     // 연재요일은 자주 바뀌지 않으므로 별도의 엔티티가 아닌 @ElementCollection사용
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
@@ -78,6 +81,7 @@ public class Creation extends BaseEntity {
         this.title = title;
         this.plot = plot;
         this.isPublic = isPublic;
+        this.favoriteCount = 0;
     }
 
     public static Creation create(Creator creator,
@@ -95,11 +99,6 @@ public class Creation extends BaseEntity {
                 .isPublic(isPublic)
                 .build();
     }
-
-    public void publish() {
-        this.isPublic = true;
-    }
-    public void unpublish() { this.isPublic = false; }
 
     public void addThumbnail(CreationThumbnail thumbnail) {
         this.creationThumbnails.add(thumbnail);
