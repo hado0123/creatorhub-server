@@ -2,16 +2,12 @@ package com.creatorhub.dto;
 
 public record CreationFavoriteResponse(
         Long creationId,
-        Integer favoriteCount,
-        boolean favorited,
-        boolean changed
+        boolean favorited
 ) {
     public static CreationFavoriteResponse of(
             Long creationId,
-            Integer favoriteCount,
-            boolean favorited,
-            boolean changed
+            boolean favorited
     ) {
-        return new CreationFavoriteResponse(creationId, favoriteCount, favorited, changed);
+        return new CreationFavoriteResponse(creationId, favorited);
     }
 }
