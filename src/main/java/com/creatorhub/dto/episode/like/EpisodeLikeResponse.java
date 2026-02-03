@@ -2,10 +2,9 @@ package com.creatorhub.dto.episode.like;
 
 public record EpisodeLikeResponse(
         Long episodeId,
-        Integer likeCount,
         boolean liked
 ) {
-    public static EpisodeLikeResponse of(Long episodeId, Integer likeCount, boolean liked) {
-        return new EpisodeLikeResponse(episodeId, likeCount, liked);
+    public static EpisodeLikeResponse of(Long episodeId, boolean liked) {
+        return new EpisodeLikeResponse(episodeId, liked);
     }
 }

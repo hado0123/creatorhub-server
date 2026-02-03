@@ -2,7 +2,6 @@ package com.creatorhub.controller;
 
 
 import com.creatorhub.dto.episode.rating.EpisodeRatingRequest;
-import com.creatorhub.dto.episode.rating.EpisodeRatingResponse;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.service.EpisodeRatingService;
 import jakarta.validation.Valid;
@@ -23,12 +22,11 @@ public class EpisodeRatingController {
      * 별점 등록
      */
     @PostMapping("/create")
-    public ResponseEntity<EpisodeRatingResponse> rate(
+    public ResponseEntity<Void> rate(
             @AuthenticationPrincipal CustomUserPrincipal principal,
             @Valid @RequestBody EpisodeRatingRequest req
     ) {
-        EpisodeRatingResponse episodeRatingResponse
-                = episodeRatingService.rate(principal.id(), req.episodeId(), req.score());
-        return ResponseEntity.ok(episodeRatingResponse);
+        episodeRatingService.rate(principal.id(), req.episodeId(), req.score());
+        return ResponseEntity.ok().build();
     }
 }

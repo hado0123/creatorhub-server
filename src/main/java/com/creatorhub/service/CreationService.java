@@ -89,7 +89,7 @@ public class CreationService {
                 creation,
                 posterOriginal,
                 CreationThumbnailType.POSTER,
-                (short) 0,
+                0,
                 null
         );
         creation.addThumbnail(posterOriginalThumb);
@@ -99,13 +99,13 @@ public class CreationService {
                 creation,
                 byKey.get(baseKey + ThumbnailKeys.HORIZONTAL_SUFFIX),
                 CreationThumbnailType.HORIZONTAL,
-                (short) 0,
+                0,
                 null
         );
         creation.addThumbnail(horizontalOriginalThumb);
 
         // 리사이징 이미지 6개 - displayOrder = 1..6, sourceImage = horizontalOriginalThumb
-        short order = 1;
+        int order = 1;
         for (String suffix : ThumbnailKeys.DERIVED_SUFFIXES) {
             FileObject derivedFo = byKey.get(baseKey + suffix);
 

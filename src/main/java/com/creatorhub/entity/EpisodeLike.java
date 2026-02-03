@@ -5,12 +5,14 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(
         name = "episode_like",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_episode_like_member_episode",
+                columnNames = {"member_id", "episode_id"}
+        ),
         indexes = {
                 @Index(name = "idx_episode_like_episode", columnList = "episode_id"),
                 @Index(name = "idx_episode_like_member_created_at", columnList = "member_id, created_at")
@@ -18,8 +20,6 @@ import org.hibernate.annotations.SQLRestriction;
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@SQLDelete(sql = "UPDATE episode_like SET deleted_at = NOW() WHERE id = ?")
-@SQLRestriction("deleted_at IS NULL")
 public class EpisodeLike extends BaseTimeEntity {
 
     @Id

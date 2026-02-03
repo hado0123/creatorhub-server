@@ -40,6 +40,7 @@ creatorhub-server/
 │        └─ application-test.yml  # 테스트 코드용
 │
 ├─ .env # docker 컨테이너 생성시 사용(비공개, gitignore)
+├─ .env.example # .env 샘플
 ├─ docker-compose.override.yml # 개발용
 ├─ docker-compose.prod.yml # 배포용
 ├─ docker-compose.yml # 공통

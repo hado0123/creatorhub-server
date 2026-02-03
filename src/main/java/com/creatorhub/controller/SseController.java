@@ -1,6 +1,7 @@
 package com.creatorhub.controller;
 
 import com.creatorhub.common.sse.SseEmitters;
+import com.creatorhub.constant.SseEventType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +19,7 @@ public class SseController {
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe(@RequestParam String baseKey) {
         SseEmitter emitter = sseEmitters.add(baseKey);
-        sseEmitters.send(baseKey, "connected", "baseKey: " + baseKey);
+        sseEmitters.send(baseKey, SseEventType.CONNECTED, "baseKey: " + baseKey);
         return emitter;
     }
 }

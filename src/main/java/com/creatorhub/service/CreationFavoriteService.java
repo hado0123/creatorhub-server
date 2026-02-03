@@ -5,13 +5,14 @@ import com.creatorhub.dto.creation.favorite.FavoriteCreationItem;
 import com.creatorhub.entity.Creation;
 import com.creatorhub.entity.CreationFavorite;
 import com.creatorhub.entity.Member;
-import com.creatorhub.exception.creator.CreationFavoriteNotFoundException;
 import com.creatorhub.exception.creator.CreationNotFoundException;
 import com.creatorhub.exception.member.MemberNotFoundException;
 import com.creatorhub.repository.CreationFavoriteRepository;
 import com.creatorhub.repository.CreationRepository;
 import com.creatorhub.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CreationFavoriteService {
     private final CreationFavoriteRepository creationFavoriteRepository;
     private final CreationRepository creationRepository;
@@ -29,31 +31,23 @@ public class CreationFavoriteService {
      */
     @Transactional
     public CreationFavoriteResponse favorite(Long memberId, Long creationId) {
-        // 존재 검증
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(MemberNotFoundException::new);
 
         Creation creation = creationRepository.findById(creationId)
                 .orElseThrow(CreationNotFoundException::new);
 
-        // 이미 관심이면 그대로 반환
-        if (creationFavoriteRepository.existsByMemberIdAndCreationId(memberId, creationId)) {
-            Integer count = creation.getFavoriteCount();
-            return CreationFavoriteResponse.of(creationId, count == null ? 0 : count, true);
+        // 유니크 + 예외로 멱등 처리
+        try {
+            // flush로 insert를 즉시 실행해 유니크(중복) 실패를 여기서 확정
+            creationFavoriteRepository.saveAndFlush(CreationFavorite.create(member, creation));
+        } catch (DataIntegrityViolationException e) {
+            return CreationFavoriteResponse.of(creationId, true);
         }
 
-        // 관심 등록
-        creationFavoriteRepository.save(CreationFavorite.create(member, creation));
+        creationRepository.updateFavoriteCount(creationId, 1);
 
-        // favorite_count 컬럼값 증가
-        creationRepository.updateFavoriteCountSafely(creationId, +1);
-
-        // 최신 카운트 다시 읽기(정확한 값 응답용)
-        Integer newCount = creationRepository.findById(creationId)
-                .map(c -> c.getFavoriteCount() == null ? 0 : c.getFavoriteCount())
-                .orElse(0);
-
-        return CreationFavoriteResponse.of(creationId, newCount, true);
+        return CreationFavoriteResponse.of(creationId, true);
     }
 
     /**
@@ -61,20 +55,15 @@ public class CreationFavoriteService {
      */
     @Transactional
     public CreationFavoriteResponse unfavorite(Long memberId, Long creationId) {
-        CreationFavorite favorite = creationFavoriteRepository.findByMemberIdAndCreationId(memberId, creationId)
-                .orElseThrow(CreationFavoriteNotFoundException::new);
+        // delete row count 기반 멱등 처리 (동시성에서도 count 정합성 보장)
+        int deleted = creationFavoriteRepository
+                .deleteByMemberIdAndCreationId(memberId, creationId);
 
-        creationFavoriteRepository.delete(favorite);
+        if (deleted > 0) {
+            creationRepository.updateFavoriteCount(creationId, -1);
+        }
 
-        // favorite_count 컬럼값 감소
-        creationRepository.updateFavoriteCountSafely(creationId, -1);
-
-        // 최신 카운트 다시 읽기(정확한 값 응답용)
-        Integer newCount = creationRepository.findById(creationId)
-                .map(c -> c.getFavoriteCount() == null ? 0 : c.getFavoriteCount())
-                .orElse(0);
-
-        return CreationFavoriteResponse.of(creationId, newCount, false);
+        return CreationFavoriteResponse.of(creationId, false);
     }
 
     /**
@@ -84,15 +73,15 @@ public class CreationFavoriteService {
         return creationFavoriteRepository.findByMemberIdOrderByCreatedAtDesc(memberId, pageable)
                 .map(cf -> {
                     Creation c = cf.getCreation();
-                    Integer cnt = c.getFavoriteCount() == null ? 0 : c.getFavoriteCount();
                     return new FavoriteCreationItem(
                             c.getId(),
                             c.getTitle(),
                             c.getPlot(),
                             c.isPublic(),
-                            cnt,
+                            c.getFavoriteCount(),
                             cf.getCreatedAt()
                     );
                 });
     }
+
 }
