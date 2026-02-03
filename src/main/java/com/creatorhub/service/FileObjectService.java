@@ -164,12 +164,13 @@ public class FileObjectService {
             long sizeBytes = resp.derivedSizeByKey().getOrDefault(key, 0L);
             long maxSize = thumbnailSize.toBytes(); // 1MB
 
-            // size가 0또는 1MB 초과면 '없음(업로드 실패)'로 간주
+            // size가 0또는 1MB 초과면 '업로드 실패'로 간주
             FileObjectStatus status = sizeBytes == 0L || sizeBytes > maxSize?
                     FileObjectStatus.FAILED : FileObjectStatus.READY;
 
             FileObject fo = existingMap.get(key);
 
+            // 기존 fileObject가 존재하지 않으면 insert 존재하면 status, size update
             if (fo == null) {
                 toInsert.add(FileObject.create(
                         key,
