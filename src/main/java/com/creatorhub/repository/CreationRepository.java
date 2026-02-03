@@ -8,7 +8,9 @@ import org.springframework.data.repository.query.Param;
 
 public interface CreationRepository extends JpaRepository<Creation, Long> {
 
-    // favoriteCount값이 0 아래로 더 이상 감소되지 않도록 처리
+    // JPA 엔티티 방식으로 작업시 읽기 -> 계산 -> 쓰기 방식으로 진행되기 때문에 동시 요청시 favoriteCount값이 -1이 될 수 있음
+    // 이를 방지하기 위해 UPDATE 쿼리에서 증감 연산을 수행해 DB에서 원자성을 보장하도록 구현
+    // 동시에 favoriteCount값이 0 아래로 더 이상 감소되지 않도록 처리
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         UPDATE Creation c
@@ -20,7 +22,8 @@ public interface CreationRepository extends JpaRepository<Creation, Long> {
                END
          WHERE c.id = :creationId
     """)
-    void updateFavoriteCountSafely(@Param("creationId") Long creationId,
+    void updateFavoriteCount(@Param("creationId") Long creationId,
                                   @Param("delta") int delta);
+
 }
 

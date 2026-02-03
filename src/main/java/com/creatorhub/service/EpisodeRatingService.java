@@ -1,6 +1,5 @@
 package com.creatorhub.service;
 
-import com.creatorhub.dto.episode.rating.EpisodeRatingResponse;
 import com.creatorhub.entity.Episode;
 import com.creatorhub.entity.EpisodeRating;
 import com.creatorhub.entity.Member;
@@ -15,8 +14,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-
 @Service
 @RequiredArgsConstructor
 public class EpisodeRatingService {
@@ -28,31 +25,22 @@ public class EpisodeRatingService {
      * 별점 등록
      */
     @Transactional
-    public EpisodeRatingResponse rate(Long memberId, Long episodeId, int score) {
+    public void rate(Long memberId, Long episodeId, int score) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(MemberNotFoundException::new);
 
         Episode episode = episodeRepository.findById(episodeId)
                 .orElseThrow(EpisodeNotFoundException::new);
 
+        // 최초 등록만 허용 (memberId, episodeId 유니크로 보장)
         try {
-            // 최초 등록만 허용 (DB UNIQUE로 보장)
-            episodeRatingRepository.save(EpisodeRating.create(member, episode, score));
+            // flush로 insert를 즉시 실행해 유니크(중복) 실패를 여기서 확정
+            episodeRatingRepository.saveAndFlush(EpisodeRating.create(member, episode, score));
         } catch (DataIntegrityViolationException e) {
-            // (member_id, episode_id) UNIQUE 위반
             throw new AlreadyEpisodeRatingException();
         }
 
         // 집계 갱신
         episodeRepository.addRating(episodeId, score);
-
-        // 최신 회차 데이터 가져오기
-        Episode latest = episodeRepository.findById(episodeId)
-                .orElseThrow(EpisodeNotFoundException::new);
-
-        Integer count = latest.getRatingCount() == null ? 0 : latest.getRatingCount();
-        BigDecimal avg = latest.getRatingAverage() == null ? BigDecimal.ZERO : latest.getRatingAverage();
-
-        return EpisodeRatingResponse.of(episodeId, score, count, avg);
     }
 }

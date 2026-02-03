@@ -81,6 +81,7 @@ public class Creation extends BaseEntity {
         this.title = title;
         this.plot = plot;
         this.isPublic = isPublic;
+        this.favoriteCount = 0;
     }
 
     public static Creation create(Creator creator,
@@ -98,11 +99,6 @@ public class Creation extends BaseEntity {
                 .isPublic(isPublic)
                 .build();
     }
-
-    public void publish() {
-        this.isPublic = true;
-    }
-    public void unpublish() { this.isPublic = false; }
 
     public void addThumbnail(CreationThumbnail thumbnail) {
         this.creationThumbnails.add(thumbnail);

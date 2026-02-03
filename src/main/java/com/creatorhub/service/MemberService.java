@@ -80,7 +80,7 @@ public class MemberService {
             throw new InvalidPasswordException();
         }
 
-        log.info("회원 인증 완료 - email: {}, memberId: {}", maskEmail(member.getEmail()), member.getId());
+        log.debug("회원 인증 완료 - email: {}, memberId: {}", maskEmail(member.getEmail()), member.getId());
 
         return TokenPayload.from(member);
     }

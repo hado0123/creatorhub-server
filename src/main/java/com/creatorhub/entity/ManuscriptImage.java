@@ -39,12 +39,12 @@ public class ManuscriptImage extends BaseTimeEntity {
     private Episode episode;
 
     @Column(nullable = false)
-    private Short displayOrder;
+    private Integer displayOrder;
 
     @Builder(access = AccessLevel.PRIVATE)
     private ManuscriptImage(FileObject fileObject,
                             Episode episode,
-                            Short displayOrder) {
+                            Integer displayOrder) {
         this.fileObject = fileObject;
         this.episode = episode;
         this.displayOrder = displayOrder;
@@ -52,7 +52,7 @@ public class ManuscriptImage extends BaseTimeEntity {
 
     public static ManuscriptImage create(FileObject fileObject,
                                          Episode episode,
-                                         short displayOrder) {
+                                         Integer displayOrder) {
         return ManuscriptImage.builder()
                 .fileObject(fileObject)
                 .episode(episode)
@@ -68,7 +68,7 @@ public class ManuscriptImage extends BaseTimeEntity {
         this.fileObject = fileObject;
     }
 
-    public void changeDisplayOrder(short displayOrder) {
+    public void changeDisplayOrder(Integer displayOrder) {
         this.displayOrder = displayOrder;
     }
 }

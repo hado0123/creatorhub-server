@@ -1,12 +1,10 @@
 package com.creatorhub.controller;
 
 
-import com.creatorhub.dto.creation.CreationFavoriteRequest;
 import com.creatorhub.dto.creation.CreationFavoriteResponse;
 import com.creatorhub.dto.creation.favorite.FavoriteCreationItem;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.service.CreationFavoriteService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,20 +14,20 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/creations/favorites")
+@RequestMapping("/api/creations")
 public class CreationFavoriteController {
     private final CreationFavoriteService creationFavoriteService;
 
     /**
      * 관심 등록
      */
-    @PostMapping("/create")
+    @PostMapping("/{creationId}/favorite")
     public ResponseEntity<CreationFavoriteResponse> favorite(
             @AuthenticationPrincipal CustomUserPrincipal principal,
-            @Valid @RequestBody CreationFavoriteRequest req
+            @PathVariable Long creationId
     ) {
         CreationFavoriteResponse creationFavoriteResponse =
-                creationFavoriteService.favorite(principal.id(), req.creationId());
+                creationFavoriteService.favorite(principal.id(), creationId);
 
         return ResponseEntity.ok(creationFavoriteResponse);
     }
@@ -37,7 +35,7 @@ public class CreationFavoriteController {
     /**
      * 관심 해제
      */
-    @DeleteMapping("/delete/{creationId}")
+    @DeleteMapping("/{creationId}/favorite")
     public ResponseEntity<CreationFavoriteResponse> unfavorite(
             @AuthenticationPrincipal CustomUserPrincipal principal,
             @PathVariable Long creationId
@@ -51,7 +49,7 @@ public class CreationFavoriteController {
     /**
      * 내 관심작품 목록
      */
-    @GetMapping("/me")
+    @GetMapping("/me/favorites")
     public ResponseEntity<Page<FavoriteCreationItem>> myFavorites(
             @AuthenticationPrincipal CustomUserPrincipal principal,
             Pageable pageable

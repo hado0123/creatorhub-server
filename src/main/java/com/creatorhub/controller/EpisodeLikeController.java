@@ -1,10 +1,8 @@
 package com.creatorhub.controller;
 
-import com.creatorhub.dto.episode.like.EpisodeLikeRequest;
 import com.creatorhub.dto.episode.like.EpisodeLikeResponse;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.service.EpisodeLikeService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -12,22 +10,22 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/episodes/likes")
+@RequestMapping("/api/episodes")
 public class EpisodeLikeController {
     private final EpisodeLikeService episodeLikeService;
 
-    @PostMapping("/create")
+    @PostMapping("/{episodeId}/like")
     public ResponseEntity<EpisodeLikeResponse> like(
             @AuthenticationPrincipal CustomUserPrincipal principal,
-            @Valid @RequestBody EpisodeLikeRequest req
+            @PathVariable Long episodeId
     ) {
         EpisodeLikeResponse episodeLikeResponse
-                = episodeLikeService.like(principal.id(), req.episodeId());
+                = episodeLikeService.like(principal.id(), episodeId);
 
         return ResponseEntity.ok(episodeLikeResponse);
     }
 
-    @DeleteMapping("/delete/{episodeId}")
+    @DeleteMapping("/{episodeId}/like")
     public ResponseEntity<EpisodeLikeResponse> unlike(
             @AuthenticationPrincipal CustomUserPrincipal principal,
             @PathVariable Long episodeId

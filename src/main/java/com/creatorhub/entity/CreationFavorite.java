@@ -11,6 +11,10 @@ import org.hibernate.annotations.SQLRestriction;
 @Entity
 @Table(
         name = "creation_favorite",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_creation_favorite_member_creation",
+                columnNames = {"member_id", "creation_id"}
+        ),
         indexes = {
                 // 내 관심작품 목록 조회 (최신순)
                 @Index(

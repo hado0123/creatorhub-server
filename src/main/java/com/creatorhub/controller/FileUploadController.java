@@ -1,8 +1,9 @@
 package com.creatorhub.controller;
 
 import com.creatorhub.common.sse.SseEmitters;
-import com.creatorhub.dto.fileUpload.ManuscriptsMarkResult;
+import com.creatorhub.constant.SseEventType;
 import com.creatorhub.dto.fileUpload.FileObjectResponse;
+import com.creatorhub.dto.fileUpload.ManuscriptsMarkResult;
 import com.creatorhub.dto.fileUpload.ThumbnailMarkResult;
 import com.creatorhub.dto.s3.*;
 import com.creatorhub.service.FileObjectService;
@@ -13,8 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/files")
@@ -104,7 +105,7 @@ public class FileUploadController {
         // SSE send
         String baseKey = req.baseKey();
         if (baseKey != null && !baseKey.isBlank()) {
-            sseEmitters.send(baseKey, "resize-complete", result);
+            sseEmitters.send(baseKey, SseEventType.RESIZE_COMPLETE, result);
         }
 
         return ResponseEntity.ok().build();
