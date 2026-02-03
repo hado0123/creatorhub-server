@@ -4,6 +4,9 @@ package com.creatorhub.service;
 import com.creatorhub.dto.episode.EpisodeRequest;
 import com.creatorhub.dto.episode.EpisodeResponse;
 import com.creatorhub.entity.*;
+import com.creatorhub.exception.creation.CreationNotFoundException;
+import com.creatorhub.exception.episode.AlreadyEpisodeException;
+import com.creatorhub.exception.fileUpload.FileObjectNotFoundException;
 import com.creatorhub.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -27,7 +30,7 @@ public class EpisodeService {
 
         // 1. Creation 조회
         Creation creation = creationRepository.findById(req.creationId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 Creation을 찾을 수 없습니다: " + req.creationId()));
+                .orElseThrow(() -> new CreationNotFoundException("해당 Creation을 찾을 수 없습니다: " + req.creationId()));
 
         // 2. 인가 체크(로그인한 사용자가 해당 작품의 작가인지 확인)
         Long ownerMemberId = creation.getCreator().getMember().getId();
@@ -37,7 +40,7 @@ public class EpisodeService {
 
         // 3. episodeNum 중복 체크(회차)
         if (episodeRepository.existsByCreationIdAndEpisodeNum(req.creationId(), req.episodeNum())) {
-            throw new IllegalArgumentException("이미 존재하는 회차 번호입니다. creationId=" + req.creationId() + ", episodeNum=" + req.episodeNum());
+            throw new AlreadyEpisodeException("이미 존재하는 회차입니다. creationId=" + req.creationId() + ", episodeNum=" + req.episodeNum());
         }
 
         // 4. 원고 displayOrder 중복 체크
@@ -49,6 +52,7 @@ public class EpisodeService {
         allFileObjectIds.add(req.episodeFileObjectId());
         allFileObjectIds.add(req.snsFileObjectId());
 
+        // 모든 원고 fileObjectId 들이 진짜 DB에 존재하는지 무결성 검증
         Map<Long, FileObject> fileObjectMap = findAllFileObjectsOrThrow(allFileObjectIds);
 
 
@@ -85,7 +89,7 @@ public class EpisodeService {
         if (found.size() != ids.size()) {
             Set<Long> foundIds = found.stream().map(FileObject::getId).collect(Collectors.toSet());
             List<Long> missing = ids.stream().filter(id -> !foundIds.contains(id)).sorted().toList();
-            throw new IllegalArgumentException("존재하지 않는 fileObjectId가 있습니다: " + missing);
+            throw new FileObjectNotFoundException("존재하지 않는 fileObjectId가 있습니다: " + missing);
         }
 
         return found.stream().collect(Collectors.toMap(FileObject::getId, fo -> fo));

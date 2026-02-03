@@ -6,6 +6,7 @@ import com.creatorhub.dto.creation.CreationRequest;
 import com.creatorhub.entity.*;
 import com.creatorhub.exception.creator.CreatorNotFoundException;
 import com.creatorhub.exception.fileUpload.FileObjectNotFoundException;
+import com.creatorhub.exception.hashtag.HashNotFoundException;
 import com.creatorhub.repository.CreationRepository;
 import com.creatorhub.repository.CreatorRepository;
 import com.creatorhub.repository.FileObjectRepository;
@@ -148,7 +149,7 @@ public class CreationService {
             Set<Long> missing = new HashSet<>(hashtagIds);
             missing.removeAll(found);
 
-            throw new IllegalArgumentException("존재하지 않는 hashtagId가 포함되어 있습니다: " + missing);
+            throw new HashNotFoundException("존재하지 않는 hashtagId가 포함되어 있습니다: " + missing);
         }
 
         for (Hashtag h : hashtags) {

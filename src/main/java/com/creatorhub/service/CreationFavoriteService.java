@@ -5,7 +5,7 @@ import com.creatorhub.dto.creation.favorite.FavoriteCreationItem;
 import com.creatorhub.entity.Creation;
 import com.creatorhub.entity.CreationFavorite;
 import com.creatorhub.entity.Member;
-import com.creatorhub.exception.creator.CreationNotFoundException;
+import com.creatorhub.exception.creation.CreationNotFoundException;
 import com.creatorhub.exception.member.MemberNotFoundException;
 import com.creatorhub.repository.CreationFavoriteRepository;
 import com.creatorhub.repository.CreationRepository;

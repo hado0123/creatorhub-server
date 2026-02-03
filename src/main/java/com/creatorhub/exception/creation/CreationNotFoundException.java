@@ -1,8 +1,8 @@
-package com.creatorhub.exception.creator;
+package com.creatorhub.exception.creation;
 
 import com.creatorhub.constant.ErrorCode;
 
-public class CreationNotFoundException extends CreatorException {
+public class CreationNotFoundException extends CreationException {
 
     public CreationNotFoundException() {
         super(ErrorCode.CREATION_NOT_FOUND);
