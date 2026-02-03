@@ -1,9 +1,8 @@
 spring:
-  config:
-    import: application-test-secret.yml
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
+  datasource:
+    url: jdbc:mysql://localhost:3306/creatorhub_test?serverTimezone=Asia/Seoul
+    username: root
+    password: 1234

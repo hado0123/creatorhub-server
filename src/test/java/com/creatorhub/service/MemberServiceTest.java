@@ -1,10 +1,13 @@
 package com.creatorhub.service;
 
+import com.creatorhub.constant.ErrorCode;
 import com.creatorhub.constant.Gender;
 import com.creatorhub.constant.Role;
 import com.creatorhub.dto.MemberRequest;
 import com.creatorhub.dto.MemberResponse;
 import com.creatorhub.entity.Member;
+import com.creatorhub.exception.DuplicateEmailException;
+import com.creatorhub.exception.MemberNotFoundException;
 import com.creatorhub.repository.MemberRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -80,8 +83,8 @@ class MemberServiceTest {
         );
 
         assertThatThrownBy(() -> memberService.signup(duplicateMember))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("이미 가입된 회원입니다.");
+                .isInstanceOf(DuplicateEmailException.class)
+                .hasMessage(ErrorCode.DUPLICATE_EMAIL.getMessage());
     }
 
 
@@ -133,7 +136,7 @@ class MemberServiceTest {
         Long invalidId = 9999L;
 
         assertThatThrownBy(() -> memberService.deleteMember(invalidId))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("존재하지 않는 회원입니다.");
+                .isInstanceOf(MemberNotFoundException.class)
+                .hasMessage(ErrorCode.MEMBER_NOT_FOUND.getMessage());
     }
 }

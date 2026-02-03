@@ -1,0 +1,24 @@
+server:
+  port: 80
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql: trace
+    org.springframework.web: debug
+    com.creatorhub: debug
+
+spring:
+  config:
+    import: application-local-secret.yml
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+    hibernate:
+      ddl-auto: update
+
+jwt:
+  access-token-exp-min: 600
+  refresh-token-exp-days: 7

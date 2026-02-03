@@ -1,0 +1,42 @@
+server:
+  port: ${SPRING_SERVER_PORT}
+
+logging:
+  level:
+    org.hibernate.SQL: info
+    org.springframework.web: info
+    com.creatorhub: info
+
+spring:
+  jpa:
+    properties:
+      hibernate:
+        format_sql: false
+        show_sql: false
+    hibernate:
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  data:
+    redis:
+      port: ${REDIS_PORT}
+      timeout: 2000
+      host: redis
+      password: ${REDIS_PASSWORD}
+
+jwt:
+  access-token-exp-min: 60
+  refresh-token-exp-days: 7
+  access-secret: ${JWT_ACCESS_SECRET}
+  refresh-secret: ${JWT_REFRESH_SECRET}
+
+cloud:
+  aws:
+    s3:
+      bucket: ${AWS_S3_BUCKET}
+
+callback:
+  secret: ${CALLBACK_RESIZE_SECRET}
+  allowedSkewMillis: 300000   # 5분 (재전송 방지용)
