@@ -43,5 +43,5 @@ callback:
 
 file:
   max:
-    thumbnail-size: ${FILE_MAX_THUMBNAIL_SIZE_BYTES}
-    manuscript-size: ${FILE_MAX_MANUSCRIPT_SIZE_BYTES}
+    thumbnail-size: 1MB
+    manuscript-size: 5MB
