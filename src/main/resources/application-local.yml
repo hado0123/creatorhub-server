@@ -22,3 +22,8 @@ spring:
 jwt:
   access-token-exp-min: 600
   refresh-token-exp-days: 7
+
+file:
+  max:
+    thumbnail-size: 1MB
+    manuscript-size: 5MB

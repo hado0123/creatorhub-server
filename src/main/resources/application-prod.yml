@@ -40,3 +40,8 @@ cloud:
 callback:
   secret: ${CALLBACK_RESIZE_SECRET}
   allowedSkewMillis: 300000   # 5분 (재전송 방지용)
+
+file:
+  max:
+    thumbnail-size: 1MB
+    manuscript-size: 5MB

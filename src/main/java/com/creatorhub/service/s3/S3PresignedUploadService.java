@@ -4,7 +4,9 @@ import com.creatorhub.constant.FileObjectStatus;
 import com.creatorhub.constant.ThumbnailKeys;
 import com.creatorhub.dto.s3.*;
 import com.creatorhub.entity.FileObject;
+import com.creatorhub.exception.s3.PresignedUrlIssueException;
 import com.creatorhub.repository.FileObjectRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -17,7 +19,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import static com.creatorhub.common.logging.LogMasking.maskStoragekey;
+
 @Service
+@Slf4j
 public class S3PresignedUploadService {
 
     private final S3Presigner presigner;
@@ -51,14 +56,21 @@ public class S3PresignedUploadService {
         fileObjectRepository.save(fo);
 
         // 4. presigned 발급
-        PresignedPutObjectRequest presigned = presignPut(storageKey, req.contentType());
+        try {
+            PresignedPutObjectRequest presigned = presignPut(storageKey, req.contentType());
 
-        // 5. 응답에 fileObjectId 포함
-        return new ThumbnailPresignedUrlResponse(
+            log.debug("Presigned PUT URL 발급완료 - fileObjectId={}, storageKey={}, contentType={}",
+                    fo.getId(), storageKey, req.contentType());
+
+            // 5. 응답에 fileObjectId 포함
+            return new ThumbnailPresignedUrlResponse(
                 fo.getId(),
                 presigned.url().toString(),
                 storageKey
-        );
+            );
+        } catch (Exception e) {
+            throw new PresignedUrlIssueException("Presigned PUT URL 발급 실패 - storageKey=" + maskStoragekey(storageKey));
+        }
     }
 
 
@@ -124,6 +136,10 @@ public class S3PresignedUploadService {
                     key
             ));
         }
+
+        log.debug("원고 Presigned PUT URL 발급완료 - creationId={}, count={}",
+                req.creationId(), count
+        );
 
         return new ManuscriptPresignedResponse(items);
     }
