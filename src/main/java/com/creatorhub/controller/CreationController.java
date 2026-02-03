@@ -1,7 +1,7 @@
 package com.creatorhub.controller;
 
 
-import com.creatorhub.dto.CreationRequest;
+import com.creatorhub.dto.creation.CreationRequest;
 import com.creatorhub.service.CreationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

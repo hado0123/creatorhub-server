@@ -1,7 +1,7 @@
 package com.creatorhub.controller;
 
 
-import com.creatorhub.dto.EpisodeRatingRequest;
+import com.creatorhub.dto.episode.rating.EpisodeRatingRequest;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.service.EpisodeRatingService;
 import jakarta.validation.Valid;

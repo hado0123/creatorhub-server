@@ -1,6 +1,7 @@
 package com.creatorhub.service;
 
-import com.creatorhub.dto.ManuscriptRegisterItem;
+
+import com.creatorhub.dto.episode.ManuscriptRegisterItem;
 import com.creatorhub.entity.Episode;
 import com.creatorhub.entity.FileObject;
 import com.creatorhub.entity.ManuscriptImage;

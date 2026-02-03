@@ -1,7 +1,8 @@
 package com.creatorhub.service;
 
-import com.creatorhub.dto.EpisodeRequest;
-import com.creatorhub.dto.EpisodeResponse;
+
+import com.creatorhub.dto.episode.EpisodeRequest;
+import com.creatorhub.dto.episode.EpisodeResponse;
 import com.creatorhub.entity.*;
 import com.creatorhub.repository.*;
 import lombok.RequiredArgsConstructor;

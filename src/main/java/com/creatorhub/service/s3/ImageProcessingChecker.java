@@ -1,7 +1,7 @@
 package com.creatorhub.service.s3;
 
 import com.creatorhub.constant.ThumbnailKeys;
-import com.creatorhub.dto.DerivativesCheckResponse;
+import com.creatorhub.dto.fileUpload.DerivativesCheckResponse;
 import com.creatorhub.dto.s3.ResizeCompleteRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

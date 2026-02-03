@@ -1,8 +1,8 @@
 package com.creatorhub.controller;
 
 
-import com.creatorhub.dto.CreationFavoriteResponse;
-import com.creatorhub.dto.FavoriteCreationItem;
+import com.creatorhub.dto.creation.CreationFavoriteResponse;
+import com.creatorhub.dto.creation.favorite.FavoriteCreationItem;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.service.CreationFavoriteService;
 import lombok.RequiredArgsConstructor;

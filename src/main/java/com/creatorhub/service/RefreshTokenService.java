@@ -27,13 +27,15 @@ public class RefreshTokenService {
      */
     public void saveRefreshToken(Long id, String refreshToken) {
         String key = key(id);
+        log.debug("Refresh token key: {}", key);
+
         redisTemplate.opsForValue().set(
                 key,
                 refreshToken,
                 refreshTokenExpDays, // 7일 뒤 삭제
                 TimeUnit.DAYS
         );
-        log.info("Refresh Token Redis 저장 완료 - id: {}", id);
+        log.debug("Refresh Token Redis 저장 완료 - memberId: {}", id);
     }
 
     /**
@@ -48,6 +50,6 @@ public class RefreshTokenService {
      */
     public void deleteRefreshToken(Long id) {
         redisTemplate.delete(key(id));
-        log.info("Refresh Token Redis 삭제 완료 - id: {}", id);
+        log.debug("Refresh Token Redis 삭제 완료 - memberId: {}", id);
     }
 }

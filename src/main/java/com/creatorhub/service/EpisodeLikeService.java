@@ -1,11 +1,11 @@
 package com.creatorhub.service;
 
-import com.creatorhub.dto.EpisodeLikeResponse;
+import com.creatorhub.dto.episode.like.EpisodeLikeResponse;
 import com.creatorhub.entity.Episode;
 import com.creatorhub.entity.EpisodeLike;
 import com.creatorhub.entity.Member;
-import com.creatorhub.exception.EpisodeNotFoundException;
-import com.creatorhub.exception.MemberNotFoundException;
+import com.creatorhub.exception.creator.EpisodeNotFoundException;
+import com.creatorhub.exception.member.MemberNotFoundException;
 import com.creatorhub.repository.EpisodeLikeRepository;
 import com.creatorhub.repository.EpisodeRepository;
 import com.creatorhub.repository.MemberRepository;

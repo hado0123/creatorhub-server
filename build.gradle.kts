@@ -41,6 +41,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.batch:spring-batch-test")
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.mockito:mockito-junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation ("io.jsonwebtoken:jjwt-api:0.13.0")
     runtimeOnly ("io.jsonwebtoken:jjwt-impl:0.13.0")

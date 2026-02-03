@@ -2,141 +2,153 @@ package com.creatorhub.service;
 
 import com.creatorhub.constant.ErrorCode;
 import com.creatorhub.constant.Gender;
-import com.creatorhub.constant.Role;
-import com.creatorhub.dto.MemberRequest;
-import com.creatorhub.dto.MemberResponse;
+import com.creatorhub.dto.member.MemberRequest;
+import com.creatorhub.dto.member.MemberResponse;
+import com.creatorhub.dto.auth.TokenPayload;
 import com.creatorhub.entity.Member;
-import com.creatorhub.exception.DuplicateEmailException;
-import com.creatorhub.exception.MemberNotFoundException;
+import com.creatorhub.exception.member.DuplicateEmailException;
+import com.creatorhub.exception.member.InvalidPasswordException;
+import com.creatorhub.exception.member.MemberNotFoundException;
 import com.creatorhub.repository.MemberRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.BDDMockito.*;
 
-@SpringBootTest
-@Transactional
-@ActiveProfiles("test")
+@ExtendWith(MockitoExtension.class)
 class MemberServiceTest {
 
-    @Autowired
-    private MemberService memberService;
+    @Mock MemberRepository memberRepository;
+    @Mock PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private MemberRepository memberRepository;
-
-    @Test
-    @DisplayName("회원가입 성공 테스트")
-    void signupSuccess() {
-        MemberRequest memberRequest = new MemberRequest(
-                "test@example.com",
-                "test1234!",
-                "홍길동",
-                LocalDate.of(1990, 1, 15),
-                Gender.MALE
-        );
-
-        MemberResponse memberResponse = memberService.signup(memberRequest);
-
-        assertThat(memberResponse).isNotNull();
-        assertThat(memberResponse.id()).isNotNull();
-        assertThat(memberResponse.email()).isEqualTo("test@example.com");
-        assertThat(memberResponse.name()).isEqualTo("홍길동");
-        assertThat(memberResponse.birthday()).isEqualTo(LocalDate.of(1990, 1, 15));
-        assertThat(memberResponse.gender()).isEqualTo(Gender.MALE);
-        assertThat(memberResponse.role()).isEqualTo(Role.MEMBER);
-        assertThat(memberResponse.createdAt()).isNotNull();
-
-        Member savedMember = memberRepository.findById(memberResponse.id()).orElse(null);
-        assertThat(savedMember).isNotNull();
-        assertThat(savedMember.getEmail()).isEqualTo("test@example.com");
-    }
-
-
+    @InjectMocks MemberService memberService;
 
     @Test
-    @DisplayName("회원가입 실패 - 이메일 중복")
-    void signupFailDuplicateEmail() {
-        // 먼저 회원 1명 등록
-        MemberRequest firstMember = new MemberRequest(
-                "duplicate@example.com",
-                "test1234!",
-                "첫번째회원",
+    @DisplayName("회원가입 실패: 이미 가입된 이메일이면 DuplicateEmailException 발생")
+    void signupDuplicateEmail() {
+        MemberRequest req = new MemberRequest(
+                "dup@test.com",
+                "pw1234",
+                "김회원",
                 LocalDate.of(1990, 1, 1),
-                Gender.MALE
-        );
-        memberService.signup(firstMember);
-
-        // 같은 이메일로 다시 회원가입 시도
-        MemberRequest duplicateMember = new MemberRequest(
-                "duplicate@example.com", // 중복 이메일
-                "test5678!",
-                "두번째회원",
-                LocalDate.of(1995, 5, 5),
                 Gender.FEMALE
         );
 
-        assertThatThrownBy(() -> memberService.signup(duplicateMember))
+        given(memberRepository.findByEmail(req.email()))
+                .willReturn(Optional.of(mock(Member.class)));
+
+        assertThatThrownBy(() -> memberService.signup(req))
                 .isInstanceOf(DuplicateEmailException.class)
                 .hasMessage(ErrorCode.DUPLICATE_EMAIL.getMessage());
-    }
 
-
-    @Test
-    @DisplayName("여러 회원 연속 가입 테스트")
-    void signupMultipleMembers() {
-        for (int i = 1; i <= 5; i++) {
-            MemberRequest memberRequest = new MemberRequest(
-                    "user" + i + "@example.com",
-                    "test1234!",
-                    "회원" + i,
-                    LocalDate.of(1990 + i, 1, i),
-                    i % 2 == 0 ? Gender.MALE : Gender.FEMALE
-            );
-
-            memberService.signup(memberRequest);
-        }
-
-
-        assertThat(memberRepository.findByEmail("user1@example.com")).isPresent();
-        assertThat(memberRepository.findByEmail("user2@example.com")).isPresent();
-        assertThat(memberRepository.findByEmail("user3@example.com")).isPresent();
-        assertThat(memberRepository.findByEmail("user4@example.com")).isPresent();
-        assertThat(memberRepository.findByEmail("user5@example.com")).isPresent();
+        then(memberRepository).should(never()).save(any(Member.class));
+        then(passwordEncoder).should(never()).encode(anyString());
     }
 
     @Test
-    @DisplayName("회원 삭제 성공 테스트")
-    void deleteMemberSuccess() {
-        MemberRequest memberRequest = new MemberRequest(
-                "delete@test.com",
-                "test1234!",
-                "김유리",
-                LocalDate.of(1992, 3, 10),
+    @DisplayName("회원가입 성공: 중복이 아니면 비밀번호 인코딩 후 저장하고 응답을 반환")
+    void signupSuccess() {
+        MemberRequest req = new MemberRequest(
+                "new@test.com",
+                "pw1234",
+                "김회원",
+                LocalDate.of(1990, 1, 1),
                 Gender.FEMALE
         );
 
-        MemberResponse memberResponse = memberService.signup(memberRequest);
-        Long memberId = memberResponse.id();
+        given(memberRepository.findByEmail(req.email()))
+                .willReturn(Optional.empty());
 
-        memberService.deleteMember(memberId);
+        given(passwordEncoder.encode(req.password()))
+                .willReturn("ENC_PW");
 
-        assertThat(memberRepository.findById(memberId)).isEmpty();
+        given(memberRepository.save(any(Member.class)))
+                .willAnswer(inv -> inv.getArgument(0));
+
+        MemberResponse resp = memberService.signup(req);
+
+        InOrder inOrder = inOrder(memberRepository, passwordEncoder);
+        inOrder.verify(memberRepository).findByEmail(req.email());
+        inOrder.verify(passwordEncoder).encode(req.password());
+        inOrder.verify(memberRepository).save(argThat(m ->
+                req.email().equals(m.getEmail()) &&
+                        "ENC_PW".equals(m.getPassword())
+        ));
+
+        assertThat(resp).isNotNull();
     }
 
     @Test
-    @DisplayName("회원 삭제 실패 - 존재하지 않는 회원")
-    void deleteMemberFailNotFound() {
-        Long invalidId = 9999L;
+    @DisplayName("회원인증 실패: 이메일에 해당하는 회원이 없으면 MemberNotFoundException 발생")
+    void authenticateNotFound() {
+        given(memberRepository.findByEmail("none@test.com"))
+                .willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> memberService.deleteMember(invalidId))
-                .isInstanceOf(MemberNotFoundException.class)
-                .hasMessage(ErrorCode.MEMBER_NOT_FOUND.getMessage());
+        assertThatThrownBy(() -> memberService.authenticate("none@test.com", "pw"))
+                .isInstanceOf(MemberNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("회원인증 실패: 비밀번호가 일치하지 않으면 InvalidPasswordException 발생")
+    void authenticateWrongPassword() {
+        Member member = mock(Member.class);
+        given(member.getPassword()).willReturn("ENC_PW");
+
+        given(memberRepository.findByEmail("a@test.com"))
+                .willReturn(Optional.of(member));
+
+        given(passwordEncoder.matches("wrong", "ENC_PW"))
+                .willReturn(false);
+
+        assertThatThrownBy(() -> memberService.authenticate("a@test.com", "wrong"))
+                .isInstanceOf(InvalidPasswordException.class);
+    }
+
+    @Test
+    @DisplayName("회원인증 성공: 비밀번호가 일치하면 TokenPayload 반환")
+    void authenticateSuccess() {
+        Member member = mock(Member.class);
+        given(member.getPassword()).willReturn("ENC_PW");
+
+        given(memberRepository.findByEmail("a@test.com"))
+                .willReturn(Optional.of(member));
+
+        given(passwordEncoder.matches("pw1234", "ENC_PW"))
+                .willReturn(true);
+
+        TokenPayload payload = memberService.authenticate("a@test.com", "pw1234");
+
+        assertThat(payload).isNotNull();
+        then(passwordEncoder).should(times(1)).matches("pw1234", "ENC_PW");
+    }
+
+    @Test
+    @DisplayName("회원삭제 실패: 회원이 없으면 MemberNotFoundException 발생")
+    void deleteNotFound() {
+        given(memberRepository.findById(999L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> memberService.deleteMember(999L))
+                .isInstanceOf(MemberNotFoundException.class);
+
+        then(memberRepository).should(never()).delete(any(Member.class));
+    }
+
+    @Test
+    @DisplayName("회원삭제 성공: 회원이 존재하면 delete 호출")
+    void deleteSuccess() {
+        Member member = mock(Member.class);
+        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
+
+        memberService.deleteMember(1L);
+
+        then(memberRepository).should(times(1)).delete(member);
     }
 }

@@ -1,8 +1,11 @@
 package com.creatorhub.controller;
 
-import com.creatorhub.dto.*;
+import com.creatorhub.dto.auth.LoginRequest;
+import com.creatorhub.dto.auth.RefreshRequest;
+import com.creatorhub.dto.auth.TokenPair;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +23,7 @@ public class AuthController {
      * 로그인
      */
     @PostMapping("/login")
-    public ResponseEntity<TokenPair> login(@RequestBody LoginRequest req) {
-        log.info("로그인 요청 - email={}", req.email());
+    public ResponseEntity<TokenPair> login(@Valid @RequestBody LoginRequest req) {
         TokenPair tokenPair = authService.login(req.email(), req.password());
         return ResponseEntity.ok(tokenPair);
     }
@@ -30,8 +32,7 @@ public class AuthController {
      * refresh 토큰 재발급
      */
     @PostMapping("/refresh")
-    public ResponseEntity<TokenPair> refresh(@RequestBody RefreshRequest req) {
-        log.info("토큰 재발급 요청");
+    public ResponseEntity<TokenPair> refresh(@Valid @RequestBody RefreshRequest req) {
         TokenPair tokenPair = authService.refresh(req.refreshToken());
         return ResponseEntity.ok(tokenPair);
     }
@@ -42,7 +43,6 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@AuthenticationPrincipal CustomUserPrincipal principal) {
         Long id = principal.id();
-        log.info("로그아웃 요청 - id={}", id);
         authService.logout(id);
         return ResponseEntity.noContent().build();
    }

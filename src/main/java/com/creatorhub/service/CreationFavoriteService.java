@@ -1,12 +1,12 @@
 package com.creatorhub.service;
 
-import com.creatorhub.dto.CreationFavoriteResponse;
-import com.creatorhub.dto.FavoriteCreationItem;
+import com.creatorhub.dto.creation.CreationFavoriteResponse;
+import com.creatorhub.dto.creation.favorite.FavoriteCreationItem;
 import com.creatorhub.entity.Creation;
 import com.creatorhub.entity.CreationFavorite;
 import com.creatorhub.entity.Member;
-import com.creatorhub.exception.CreationNotFoundException;
-import com.creatorhub.exception.MemberNotFoundException;
+import com.creatorhub.exception.creator.CreationNotFoundException;
+import com.creatorhub.exception.member.MemberNotFoundException;
 import com.creatorhub.repository.CreationFavoriteRepository;
 import com.creatorhub.repository.CreationRepository;
 import com.creatorhub.repository.MemberRepository;
