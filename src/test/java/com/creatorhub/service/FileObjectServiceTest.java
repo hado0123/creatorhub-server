@@ -6,11 +6,12 @@ import com.creatorhub.dto.fileUpload.ManuscriptsMarkResult;
 import com.creatorhub.dto.fileUpload.FileObjectResponse;
 import com.creatorhub.dto.fileUpload.ThumbnailMarkResult;
 import com.creatorhub.dto.fileUpload.DerivativesCheckResponse;
-import com.creatorhub.dto.s3.ResizeCompleteRequest;
+import com.creatorhub.dto.fileUpload.s3.ResizeCompleteRequest;
 import com.creatorhub.entity.FileObject;
 import com.creatorhub.exception.fileUpload.FileObjectNotFoundException;
 import com.creatorhub.repository.FileObjectRepository;
-import com.creatorhub.service.s3.ImageProcessingChecker;
+import com.creatorhub.service.fileObject.FileObjectService;
+import com.creatorhub.service.fileObject.s3.ImageProcessingChecker;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +31,8 @@ class FileObjectServiceTest {
     @Mock FileObjectRepository fileObjectRepository;
     @Mock ImageProcessingChecker checker;
 
-    @InjectMocks FileObjectService service;
+    @InjectMocks
+    FileObjectService service;
 
     private static FileObject newFoWithId(Long id, String key) {
         FileObject fo = FileObject.create(

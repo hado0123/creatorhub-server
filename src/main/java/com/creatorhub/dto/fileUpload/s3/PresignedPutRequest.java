@@ -1,4 +1,4 @@
-package com.creatorhub.dto.s3;
+package com.creatorhub.dto.fileUpload.s3;
 
 public interface PresignedPutRequest {
     String contentType();

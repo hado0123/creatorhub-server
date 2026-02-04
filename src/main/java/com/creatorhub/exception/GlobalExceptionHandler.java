@@ -9,7 +9,7 @@ import com.creatorhub.exception.fileUpload.FileObjectException;
 import com.creatorhub.exception.hashtag.HashtagException;
 import com.creatorhub.exception.member.MemberException;
 import com.creatorhub.exception.auth.JwtAuthenticationException;
-import com.creatorhub.exception.s3.PresignedUrlIssueException;
+import com.creatorhub.exception.fileUpload.s3.PresignedUrlIssueException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

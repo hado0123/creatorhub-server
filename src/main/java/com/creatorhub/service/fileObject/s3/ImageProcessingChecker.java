@@ -1,8 +1,8 @@
-package com.creatorhub.service.s3;
+package com.creatorhub.service.fileObject.s3;
 
 import com.creatorhub.constant.ThumbnailKeys;
 import com.creatorhub.dto.fileUpload.DerivativesCheckResponse;
-import com.creatorhub.dto.s3.ResizeCompleteRequest;
+import com.creatorhub.dto.fileUpload.s3.ResizeCompleteRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

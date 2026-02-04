@@ -1,4 +1,4 @@
-package com.creatorhub.dto.s3;
+package com.creatorhub.dto.fileUpload.s3;
 
 import jakarta.validation.constraints.*;
 

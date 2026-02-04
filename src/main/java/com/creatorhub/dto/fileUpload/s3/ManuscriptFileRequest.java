@@ -1,6 +1,6 @@
-package com.creatorhub.dto.s3;
+package com.creatorhub.dto.fileUpload.s3;
 
-import com.creatorhub.validation.annotation.ValidManuscriptSize;
+import com.creatorhub.common.validation.annotation.ValidManuscriptSize;
 import jakarta.validation.constraints.*;
 
 public record ManuscriptFileRequest (

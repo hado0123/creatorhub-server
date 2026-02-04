@@ -2,11 +2,11 @@ package com.creatorhub.service;
 
 import com.creatorhub.constant.FileObjectStatus;
 import com.creatorhub.constant.ThumbnailKeys;
-import com.creatorhub.dto.s3.*;
+import com.creatorhub.dto.fileUpload.s3.*;
 import com.creatorhub.entity.FileObject;
-import com.creatorhub.exception.s3.PresignedUrlIssueException;
+import com.creatorhub.exception.fileUpload.s3.PresignedUrlIssueException;
 import com.creatorhub.repository.FileObjectRepository;
-import com.creatorhub.service.s3.S3PresignedUploadService;
+import com.creatorhub.service.fileObject.s3.S3PresignedUploadService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
