@@ -39,11 +39,11 @@ public class Member extends BaseSoftDeleteTimeEntity {
     private LocalDate birthday;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 30, columnDefinition = "VARCHAR(30)")
     private Gender gender;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 30, columnDefinition = "VARCHAR(30)")
     private Role role;
 
     @OneToOne(mappedBy = "member", fetch = FetchType.LAZY)

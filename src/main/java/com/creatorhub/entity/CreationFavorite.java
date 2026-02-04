@@ -15,12 +15,10 @@ import lombok.NoArgsConstructor;
                 columnNames = {"member_id", "creation_id"}
         ),
         indexes = {
-                // 내 관심작품 목록 조회 (최신순)
                 @Index(
                         name = "idx_creation_favorite_member_created_at",
                         columnList = "member_id, created_at"
                 ),
-                // 작품별 관심자 조회 (알림 대상 추출)
                 @Index(
                         name = "idx_creation_favorite_creation",
                         columnList = "creation_id"
