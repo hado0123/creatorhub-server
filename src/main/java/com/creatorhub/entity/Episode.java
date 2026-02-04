@@ -106,14 +106,4 @@ public class Episode extends BaseSoftDeleteEntity {
                 .isPublic(isPublic != null && isPublic)
                 .build();
     }
-
-    public void addManuscriptImage(ManuscriptImage image) {
-        this.manuscriptImages.add(image);
-        image.changeEpisode(this);
-    }
-
-    public void addThumbnail(EpisodeThumbnail thumbnail) {
-        this.episodeThumbnails.add(thumbnail);
-        thumbnail.changeEpisode(this);
-    }
 }

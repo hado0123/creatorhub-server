@@ -66,12 +66,4 @@ public class EpisodeThumbnail extends BaseSoftDeleteTimeEntity {
     public void changeEpisode(Episode episode) {
         this.episode = episode;
     }
-
-    public void changeFileObject(FileObject fileObject) {
-        this.fileObject = fileObject;
-    }
-
-    public void changeType(EpisodeThumbnailType type) {
-        this.type = type;
-    }
 }
