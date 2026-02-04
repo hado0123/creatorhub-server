@@ -3,6 +3,7 @@ package com.creatorhub.entity;
 import com.creatorhub.constant.CreationFormat;
 import com.creatorhub.constant.CreationGenre;
 import com.creatorhub.constant.PublishDay;
+import com.creatorhub.entity.base.BaseSoftDeleteEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -22,7 +23,7 @@ import java.util.Set;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE creation SET deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
-public class Creation extends BaseEntity {
+public class Creation extends BaseSoftDeleteEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
