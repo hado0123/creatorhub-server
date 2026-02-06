@@ -17,9 +17,6 @@ import org.hibernate.annotations.SQLRestriction;
                         name = "uk_episode_rating_member_episode",
                         columnNames = {"member_id", "episode_id"}
                 )
-        },
-        indexes = {
-                @Index(name = "idx_episode_rating_episode", columnList = "episode_id"),
         }
 )
 @Getter

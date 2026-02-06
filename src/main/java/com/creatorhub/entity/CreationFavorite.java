@@ -18,10 +18,6 @@ import lombok.NoArgsConstructor;
                 @Index(
                         name = "idx_creation_favorite_member_created_at",
                         columnList = "member_id, created_at"
-                ),
-                @Index(
-                        name = "idx_creation_favorite_creation",
-                        columnList = "creation_id"
                 )
         }
 )
