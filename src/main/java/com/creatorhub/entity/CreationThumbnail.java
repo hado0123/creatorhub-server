@@ -1,6 +1,7 @@
 package com.creatorhub.entity;
 
 import com.creatorhub.constant.CreationThumbnailType;
+import com.creatorhub.entity.base.BaseSoftDeleteTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,7 +20,7 @@ import org.hibernate.annotations.SQLRestriction;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE creation_thumbnail SET deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
-public class CreationThumbnail extends BaseTimeEntity {
+public class CreationThumbnail extends BaseSoftDeleteTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,6 +1,7 @@
 package com.creatorhub.entity;
 
 import com.creatorhub.constant.FileObjectStatus;
+import com.creatorhub.entity.base.BaseSoftDeleteTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -17,7 +18,7 @@ import org.hibernate.annotations.SQLRestriction;
 @ToString()
 @SQLDelete(sql = "UPDATE file_object SET deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
-public class FileObject extends BaseTimeEntity {
+public class FileObject extends BaseSoftDeleteTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

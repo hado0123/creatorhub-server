@@ -1,5 +1,6 @@
 package com.creatorhub.entity;
 
+import com.creatorhub.entity.base.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

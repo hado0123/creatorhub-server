@@ -1,5 +1,6 @@
 package com.creatorhub.entity;
 
+import com.creatorhub.entity.base.BaseSoftDeleteTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,7 +15,7 @@ import org.hibernate.annotations.SQLRestriction;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE creator SET deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
-public class Creator extends BaseTimeEntity {
+public class Creator extends BaseSoftDeleteTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
