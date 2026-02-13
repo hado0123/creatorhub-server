@@ -1,6 +1,6 @@
-package com.creatorhub.validation.annotation;
+package com.creatorhub.common.validation.annotation;
 
-import com.creatorhub.validation.validator.ThumbnailSizeValidator;
+import com.creatorhub.common.validation.validator.ThumbnailSizeValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 

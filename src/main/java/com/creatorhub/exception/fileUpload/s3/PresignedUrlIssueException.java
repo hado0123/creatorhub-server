@@ -1,4 +1,4 @@
-package com.creatorhub.exception.s3;
+package com.creatorhub.exception.fileUpload.s3;
 
 import com.creatorhub.constant.ErrorCode;
 import lombok.Getter;

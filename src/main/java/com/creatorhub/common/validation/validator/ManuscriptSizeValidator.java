@@ -1,6 +1,6 @@
-package com.creatorhub.validation.validator;
+package com.creatorhub.common.validation.validator;
 
-import com.creatorhub.validation.annotation.ValidManuscriptSize;
+import com.creatorhub.common.validation.annotation.ValidManuscriptSize;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;

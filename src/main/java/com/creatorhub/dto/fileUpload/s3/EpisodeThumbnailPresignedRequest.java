@@ -1,18 +1,18 @@
-package com.creatorhub.dto.s3;
+package com.creatorhub.dto.fileUpload.s3;
 
-import com.creatorhub.constant.CreationThumbnailType;
-import com.creatorhub.validation.annotation.ValidThumbnailSize;
+import com.creatorhub.constant.EpisodeThumbnailType;
+import com.creatorhub.common.validation.annotation.ValidThumbnailSize;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-public record CreationThumbnailPresignedRequest(
+public record EpisodeThumbnailPresignedRequest(
 
         @NotBlank(message = "콘텐츠 타입이 존재하지 않습니다.")
         String contentType,
 
         @NotNull(message = "썸네일 타입이 존재하지 않습니다.")
-        CreationThumbnailType thumbnailType,
+        EpisodeThumbnailType thumbnailType,
 
         @NotBlank(message = "원본 파일명이 존재하지 않습니다.")
         String originalFilename,
@@ -22,7 +22,7 @@ public record CreationThumbnailPresignedRequest(
         @ValidThumbnailSize
         Long sizeBytes
 
-        ) implements PresignedPutRequest {
+) implements PresignedPutRequest {
     @Override public String resolveSuffix() {
         return thumbnailType.resolveSuffix();
     }

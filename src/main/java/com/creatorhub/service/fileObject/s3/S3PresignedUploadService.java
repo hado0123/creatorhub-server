@@ -1,10 +1,10 @@
-package com.creatorhub.service.s3;
+package com.creatorhub.service.fileObject.s3;
 
 import com.creatorhub.constant.FileObjectStatus;
 import com.creatorhub.constant.ThumbnailKeys;
-import com.creatorhub.dto.s3.*;
+import com.creatorhub.dto.fileUpload.s3.*;
 import com.creatorhub.entity.FileObject;
-import com.creatorhub.exception.s3.PresignedUrlIssueException;
+import com.creatorhub.exception.fileUpload.s3.PresignedUrlIssueException;
 import com.creatorhub.repository.FileObjectRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

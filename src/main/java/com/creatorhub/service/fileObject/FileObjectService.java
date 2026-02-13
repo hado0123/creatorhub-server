@@ -1,4 +1,4 @@
-package com.creatorhub.service;
+package com.creatorhub.service.fileObject;
 
 import com.creatorhub.constant.FileObjectStatus;
 import com.creatorhub.constant.ThumbnailKeys;
@@ -6,11 +6,11 @@ import com.creatorhub.dto.fileUpload.ManuscriptsMarkResult;
 import com.creatorhub.dto.fileUpload.DerivativesCheckResponse;
 import com.creatorhub.dto.fileUpload.FileObjectResponse;
 import com.creatorhub.dto.fileUpload.ThumbnailMarkResult;
-import com.creatorhub.dto.s3.ResizeCompleteRequest;
+import com.creatorhub.dto.fileUpload.s3.ResizeCompleteRequest;
 import com.creatorhub.entity.FileObject;
 import com.creatorhub.exception.fileUpload.FileObjectNotFoundException;
 import com.creatorhub.repository.FileObjectRepository;
-import com.creatorhub.service.s3.ImageProcessingChecker;
+import com.creatorhub.service.fileObject.s3.ImageProcessingChecker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
