@@ -1,8 +1,8 @@
-package com.creatorhub.exception.creator;
+package com.creatorhub.exception.episode;
 
 import com.creatorhub.constant.ErrorCode;
 
-public class EpisodeNotFoundException extends CreatorException {
+public class EpisodeNotFoundException extends EpisodeException {
 
     public EpisodeNotFoundException() {
         super(ErrorCode.EPISODE_NOT_FOUND);

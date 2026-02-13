@@ -6,6 +6,7 @@ import com.creatorhub.exception.creation.CreationException;
 import com.creatorhub.exception.creator.CreatorException;
 import com.creatorhub.exception.episode.EpisodeException;
 import com.creatorhub.exception.fileUpload.FileObjectException;
+import com.creatorhub.exception.hashtag.HashtagException;
 import com.creatorhub.exception.member.MemberException;
 import com.creatorhub.exception.auth.JwtAuthenticationException;
 import com.creatorhub.exception.s3.PresignedUrlIssueException;
@@ -151,7 +152,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(FileObjectException.class)
     public ResponseEntity<ErrorResponse> handleFileObjectException(
-            CreatorException ex,
+            FileObjectException ex,
             HttpServletRequest request) {
 
         log.warn("FileObjectException occurred - Message: {}", ex.getMessage());
@@ -174,6 +175,24 @@ public class GlobalExceptionHandler {
 
         log.error("PresignedUrlIssueException occurred - Message: {}", ex.getMessage(), ex);
         ErrorResponse errorResponse = ErrorResponse.of(ex.getErrorCode(), request.getRequestURI());
+
+        return ResponseEntity
+                .status(ex.getErrorCode().getHttpStatus())
+                .body(errorResponse);
+    }
+
+    /**
+     * Hashtag 관련 예외 처리
+     */
+    @ExceptionHandler(HashtagException.class)
+    public ResponseEntity<ErrorResponse> handleHashtagException(
+            HashtagException ex,
+            HttpServletRequest request) {
+
+        log.warn("HashtagException occurred - Message: {}", ex.getMessage());
+
+        ErrorResponse errorResponse =
+                ErrorResponse.of(ex.getErrorCode(), request.getRequestURI());
 
         return ResponseEntity
                 .status(ex.getErrorCode().getHttpStatus())

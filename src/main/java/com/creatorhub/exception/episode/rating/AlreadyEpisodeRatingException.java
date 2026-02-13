@@ -1,8 +1,9 @@
-package com.creatorhub.exception.creator;
+package com.creatorhub.exception.episode.rating;
 
 import com.creatorhub.constant.ErrorCode;
+import com.creatorhub.exception.episode.EpisodeException;
 
-public class AlreadyEpisodeRatingException extends CreatorException {
+public class AlreadyEpisodeRatingException extends EpisodeException {
 
     public AlreadyEpisodeRatingException() {
         super(ErrorCode.ALREADY_EPISODE_RATING);
