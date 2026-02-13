@@ -57,8 +57,4 @@ public class EpisodeRating extends BaseSoftDeleteTimeEntity {
                 .score(score)
                 .build();
     }
-
-    public void changeScore(int score) {
-        this.score = score;
-    }
 }

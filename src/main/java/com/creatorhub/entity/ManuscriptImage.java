@@ -64,12 +64,4 @@ public class ManuscriptImage extends BaseSoftDeleteTimeEntity {
     public void changeEpisode(Episode episode) {
         this.episode = episode;
     }
-
-    public void changeFileObject(FileObject fileObject) {
-        this.fileObject = fileObject;
-    }
-
-    public void changeDisplayOrder(Integer displayOrder) {
-        this.displayOrder = displayOrder;
-    }
 }
