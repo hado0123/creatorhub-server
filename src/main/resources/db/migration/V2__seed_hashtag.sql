@@ -1,0 +1,53 @@
+-- ================================================================
+-- hashtag 기본 데이터
+-- ================================================================
+
+INSERT INTO hashtag (title) VALUES ('로맨스');
+INSERT INTO hashtag (title) VALUES ('로맨스판타지');
+INSERT INTO hashtag (title) VALUES ('판타지');
+INSERT INTO hashtag (title) VALUES ('현대판타지');
+INSERT INTO hashtag (title) VALUES ('무협');
+INSERT INTO hashtag (title) VALUES ('액션');
+INSERT INTO hashtag (title) VALUES ('스릴러');
+INSERT INTO hashtag (title) VALUES ('미스터리');
+INSERT INTO hashtag (title) VALUES ('공포');
+INSERT INTO hashtag (title) VALUES ('드라마');
+INSERT INTO hashtag (title) VALUES ('일상');
+INSERT INTO hashtag (title) VALUES ('개그');
+INSERT INTO hashtag (title) VALUES ('코미디');
+INSERT INTO hashtag (title) VALUES ('학원물');
+INSERT INTO hashtag (title) VALUES ('성장물');
+INSERT INTO hashtag (title) VALUES ('치유');
+INSERT INTO hashtag (title) VALUES ('감성');
+INSERT INTO hashtag (title) VALUES ('힐링');
+INSERT INTO hashtag (title) VALUES ('브로맨스');
+INSERT INTO hashtag (title) VALUES ('삼각관계');
+INSERT INTO hashtag (title) VALUES ('재회');
+INSERT INTO hashtag (title) VALUES ('첫사랑');
+INSERT INTO hashtag (title) VALUES ('짝사랑');
+INSERT INTO hashtag (title) VALUES ('빙의');
+INSERT INTO hashtag (title) VALUES ('회귀');
+INSERT INTO hashtag (title) VALUES ('전생');
+INSERT INTO hashtag (title) VALUES ('환생');
+INSERT INTO hashtag (title) VALUES ('이세계');
+INSERT INTO hashtag (title) VALUES ('헌터');
+INSERT INTO hashtag (title) VALUES ('던전');
+INSERT INTO hashtag (title) VALUES ('마법');
+INSERT INTO hashtag (title) VALUES ('검과마법');
+INSERT INTO hashtag (title) VALUES ('왕궁');
+INSERT INTO hashtag (title) VALUES ('귀족');
+INSERT INTO hashtag (title) VALUES ('영애');
+INSERT INTO hashtag (title) VALUES ('황제');
+INSERT INTO hashtag (title) VALUES ('기사');
+INSERT INTO hashtag (title) VALUES ('마왕');
+INSERT INTO hashtag (title) VALUES ('용사');
+INSERT INTO hashtag (title) VALUES ('아이돌');
+INSERT INTO hashtag (title) VALUES ('연예계');
+INSERT INTO hashtag (title) VALUES ('직장물');
+INSERT INTO hashtag (title) VALUES ('요리');
+INSERT INTO hashtag (title) VALUES ('스포츠');
+INSERT INTO hashtag (title) VALUES ('게임');
+INSERT INTO hashtag (title) VALUES ('서바이벌');
+INSERT INTO hashtag (title) VALUES ('배틀');
+INSERT INTO hashtag (title) VALUES ('하렘');
+INSERT INTO hashtag (title) VALUES ('느와르');

@@ -33,6 +33,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation(enforcedPlatform("software.amazon.awssdk:bom:2.25.38"))
     implementation("software.amazon.awssdk:s3")
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-mysql")
     compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("com.mysql:mysql-connector-j")
