@@ -57,7 +57,13 @@ public class Creation extends BaseSoftDeleteEntity {
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
             name = "creation_publish_day",
-            joinColumns = @JoinColumn(name = "creation_id")
+            joinColumns = @JoinColumn(name = "creation_id"),
+            uniqueConstraints = {
+                @UniqueConstraint(
+                name = "uk_creation_publish_day",
+                columnNames = {"creation_id", "publish_day"}
+            )
+    }
     )
     @Enumerated(EnumType.STRING)
     @Column(name = "publish_day", nullable = false, length = 30, columnDefinition = "VARCHAR(30)")

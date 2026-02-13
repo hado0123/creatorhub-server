@@ -17,7 +17,6 @@ import org.hibernate.annotations.SQLRestriction;
                 columnNames = {"episode_id", "display_order"}
         ),
         indexes = {
-                @Index(name = "idx_manuscript_image_episode_id", columnList = "episode_id"),
                 @Index(name = "idx_manuscript_image_file_object_id", columnList = "file_object_id")
         }
 )

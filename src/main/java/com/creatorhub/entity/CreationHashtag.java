@@ -14,6 +14,12 @@ import lombok.NoArgsConstructor;
                         name = "uk_creation_hashtag_creation_id_hashtag_id",
                         columnNames = {"creation_id", "hashtag_id"}
                 )
+        },
+        indexes = {
+                @Index(
+                        name = "idx_creation_hashtag_hashtag_creation",
+                        columnList = "hashtag_id, creation_id"
+                )
         }
 )
 @Getter

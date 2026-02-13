@@ -15,7 +15,6 @@ import lombok.NoArgsConstructor;
                 columnNames = {"member_id", "episode_id"}
         ),
         indexes = {
-                @Index(name = "idx_episode_like_episode", columnList = "episode_id"),
                 @Index(name = "idx_episode_like_member_created_at", columnList = "member_id, created_at")
         }
 )
