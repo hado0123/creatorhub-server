@@ -50,3 +50,7 @@ file:
   max:
     thumbnail-size: 1MB
     manuscript-size: 5MB
+
+cors:
+  client:
+    url: ${CORS_CLIENT_URL}
