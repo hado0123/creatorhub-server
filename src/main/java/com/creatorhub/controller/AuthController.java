@@ -1,6 +1,7 @@
 package com.creatorhub.controller;
 
 import com.creatorhub.dto.auth.LoginRequest;
+import com.creatorhub.dto.auth.LoginResponse;
 import com.creatorhub.dto.auth.RefreshRequest;
 import com.creatorhub.dto.auth.TokenPair;
 import com.creatorhub.security.auth.CustomUserPrincipal;
@@ -21,10 +22,11 @@ public class AuthController {
      * 로그인
      */
     @PostMapping("/login")
-    public ResponseEntity<TokenPair> login(@Valid @RequestBody LoginRequest req) {
-        TokenPair tokenPair = authService.login(req.email(), req.password());
-        return ResponseEntity.ok(tokenPair);
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {  // 변경
+        LoginResponse loginResponse = authService.login(req.email(), req.password());  // 변경
+        return ResponseEntity.ok(loginResponse);  // 변경
     }
+
 
     /**
      * refresh 토큰 재발급

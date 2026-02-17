@@ -1,6 +1,7 @@
 package com.creatorhub.service;
 
 import com.creatorhub.constant.ErrorCode;
+import com.creatorhub.dto.auth.LoginResponse;
 import com.creatorhub.dto.auth.RefreshTokenPayload;
 import com.creatorhub.dto.auth.TokenPair;
 import com.creatorhub.dto.auth.TokenPayload;
@@ -28,7 +29,7 @@ public class AuthService {
     /**
      * 로그인: 인증 + 토큰 발급
      */
-    public TokenPair login(String email, String rawPassword) {
+    public LoginResponse login(String email, String rawPassword) {
 
         // 1) 이메일/비번 검증 (실제 로그인)
         TokenPayload payload = memberService.authenticate(email, rawPassword);
@@ -42,7 +43,8 @@ public class AuthService {
 
         log.debug("로그인 성공 - memberId={}, role={}", payload.id(), payload.role());
 
-        return new TokenPair(accessToken, refreshToken);
+        TokenPair tokenPair = new TokenPair(accessToken, refreshToken);
+        return LoginResponse.of(tokenPair, payload);
     }
 
     /**

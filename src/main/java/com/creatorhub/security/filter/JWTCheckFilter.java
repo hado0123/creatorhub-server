@@ -114,6 +114,7 @@ public class JWTCheckFilter extends OncePerRequestFilter {
                     new JwtAuthenticationException(ErrorCode.INVALID_TOKEN, e);
 
             authenticationEntryPoint.commence(request, response, authEx);
+
         }
     }
 }

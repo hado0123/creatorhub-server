@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @Slf4j
@@ -23,6 +24,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final JWTUtil jwtUtil;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     public JWTCheckFilter jwtCheckFilter() {
@@ -32,6 +34,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         log.debug("Security filter chain.....");
+
+        // CORS 설정 적용 (WebConfig의 corsConfigurationSource 사용)
+        httpSecurity.cors(cors -> cors.configurationSource(corsConfigurationSource));
 
         // 로그인 페이지 사용 X
         httpSecurity.formLogin(AbstractHttpConfigurer::disable);

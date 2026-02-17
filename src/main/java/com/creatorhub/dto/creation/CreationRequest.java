@@ -31,7 +31,7 @@ public record CreationRequest(
         @NotNull(message = "공개 여부는 필수입니다.")
         Boolean isPublic,
 
-        @NotEmpty(message = "공개 여부는 필수입니다.")
+        @NotEmpty(message = "연재 요일은 필수입니다.")
         Set<PublishDay> publishDays,
 
         @NotEmpty(message = "해시태그는 최소 1개 이상 선택해야 합니다.")
