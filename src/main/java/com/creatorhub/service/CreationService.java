@@ -2,6 +2,7 @@ package com.creatorhub.service;
 
 import com.creatorhub.constant.CreationThumbnailType;
 import com.creatorhub.constant.ThumbnailKeys;
+import com.creatorhub.dto.creation.CreationListResponse;
 import com.creatorhub.dto.creation.CreationRequest;
 import com.creatorhub.entity.*;
 import com.creatorhub.exception.creator.CreatorNotFoundException;
@@ -28,11 +29,21 @@ public class CreationService {
     private final CreatorRepository creatorRepository;
     private final HashtagRepository hashtagRepository;
 
+    public List<CreationListResponse> getMyCreations(Long memberId) {
+        Creator creator = creatorRepository.findByMemberId(memberId)
+                .orElseThrow(CreatorNotFoundException::new);
+
+        return creationRepository.findAllByCreatorIdWithThumbnails(creator.getId())
+                .stream()
+                .map(CreationListResponse::from)
+                .toList();
+    }
+
     @Transactional
-    public Long createCreation(CreationRequest req) {
+    public Long createCreation(CreationRequest req, Long id) {
 
         // 1. 작가 조회
-        Creator creator = creatorRepository.findById(req.creatorId())
+        Creator creator = creatorRepository.findByMemberId(id)
                 .orElseThrow(CreatorNotFoundException::new);
 
         // 2. Creation 생성

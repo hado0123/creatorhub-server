@@ -54,6 +54,16 @@ public class JWTCheckFilter extends OncePerRequestFilter {
 
         String headerStr = request.getHeader("Authorization");
 
+        // SSE 연결은 브라우저 EventSource가 커스텀 헤더를 지원하지 않으므로
+        // /api/sse/subscribe 경로에 한해 쿼리 파라미터 token을 Authorization 헤더 대용으로 허용
+        if ((headerStr == null || headerStr.isBlank())
+                && request.getServletPath().startsWith("/api/sse/")) {
+            String tokenParam = request.getParameter("token");
+            if (tokenParam != null && !tokenParam.isBlank()) {
+                headerStr = "Bearer " + tokenParam;
+            }
+        }
+
         // 1) Authorization 헤더가 아예 없으면 → JWT 검사는 건너뛰고 다음으로 넘김
         //    (이 경우, 나중에 인가 단계에서 401 / 혹은 404 처리가 이뤄짐)
         if (headerStr == null || headerStr.isBlank()) {

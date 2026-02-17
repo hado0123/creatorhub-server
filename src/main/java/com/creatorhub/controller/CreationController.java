@@ -1,14 +1,18 @@
 package com.creatorhub.controller;
 
 
+import com.creatorhub.dto.creation.CreationListResponse;
 import com.creatorhub.dto.creation.CreationRequest;
+import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.service.CreationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -18,12 +22,26 @@ public class CreationController {
     private final CreationService creationService;
 
     /**
+     * 내 작품 목록 조회
+     */
+    @PreAuthorize("hasRole('ROLE_CREATOR')")
+    @GetMapping("/my")
+    public ResponseEntity<List<CreationListResponse>> getMyCreations(
+            @AuthenticationPrincipal CustomUserPrincipal principal
+    ) {
+        return ResponseEntity.ok(creationService.getMyCreations(principal.id()));
+    }
+
+    /**
      * 작품등록
      */
     @PreAuthorize("hasRole('ROLE_CREATOR')")
     @PostMapping("/create")
-    public ResponseEntity<Map<String, Object>> createCreation(@Valid @RequestBody CreationRequest req) {
-        Long id = creationService.createCreation(req);
+    public ResponseEntity<Map<String, Object>> createCreation(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
+            @Valid @RequestBody CreationRequest req
+    ) {
+        Long id = creationService.createCreation(req, principal.id());
         return ResponseEntity.ok(Map.of("creationId", id));
     }
 

@@ -50,12 +50,10 @@ class CreationServiceTest {
         return h;
     }
 
-    private static CreationRequest validReq(Long creatorId,
-                                            Set<Long> hashtagIds,
+    private static CreationRequest validReq(Set<Long> hashtagIds,
                                             Long horizontalId,
                                             Long posterId) {
         return new CreationRequest(
-                creatorId,
                 CreationFormat.EPISODE,
                 CreationGenre.DAILY_LIFE,
                 "me의 일상",
@@ -75,15 +73,15 @@ class CreationServiceTest {
     @Test
     @DisplayName("createCreation 성공: creator 조회 -> 썸네일 7개 존재 검증 -> poster 조회 -> hashtag 연결 -> creation 저장")
     void createCreation_success() {
-        long creatorId = 1L;
+        long memberId = 1L;
         long horizontalId = 10L;
         long posterId = 20L;
         Set<Long> hashtagIds = Set.of(100L, 101L);
 
-        CreationRequest req = validReq(creatorId, hashtagIds, horizontalId, posterId);
+        CreationRequest req = validReq(hashtagIds, horizontalId, posterId);
 
         Creator creator = mock(Creator.class);
-        given(creatorRepository.findById(creatorId)).willReturn(Optional.of(creator));
+        given(creatorRepository.findByMemberId(memberId)).willReturn(Optional.of(creator));
 
         // horizontal original + baseKey
         String baseKey = "upload/2026/01/27/creation-abc";
@@ -116,11 +114,11 @@ class CreationServiceTest {
         given(saved.getId()).willReturn(999L);
         given(creationRepository.save(any(Creation.class))).willReturn(saved);
 
-        Long creationId = creationService.createCreation(req);
+        Long creationId = creationService.createCreation(req, memberId);
 
         assertThat(creationId).isEqualTo(999L);
 
-        then(creatorRepository).should(times(1)).findById(creatorId);
+        then(creatorRepository).should(times(1)).findByMemberId(memberId);
         then(fileObjectRepository).should(times(1)).findById(horizontalId);
         then(fileObjectRepository).should(times(1)).findByStorageKeyIn(thumbKeys);
         then(fileObjectRepository).should(times(1)).findById(posterId);
@@ -131,13 +129,13 @@ class CreationServiceTest {
     @Test
     @DisplayName("createCreation 실패: creator 없으면 CreatorNotFoundException")
     void createCreation_creatorNotFound() {
-        long creatorId = 1L;
+        long memberId = 1L;
 
-        CreationRequest req = validReq(creatorId, Set.of(100L), 10L, 20L);
+        CreationRequest req = validReq(Set.of(100L), 10L, 20L);
 
-        given(creatorRepository.findById(creatorId)).willReturn(Optional.empty());
+        given(creatorRepository.findByMemberId(memberId)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> creationService.createCreation(req))
+        assertThatThrownBy(() -> creationService.createCreation(req, memberId))
                 .isInstanceOf(CreatorNotFoundException.class);
 
         then(creationRepository).should(never()).save(any());
@@ -148,15 +146,16 @@ class CreationServiceTest {
     @Test
     @DisplayName("createCreation 실패: 가로형 원본 FileObject 없으면 FileObjectNotFoundException")
     void createCreation_horizontalOriginalNotFound() {
-        CreationRequest req = validReq(1L, Set.of(100L), 10L, 20L);
+        long memberId = 1L;
+        CreationRequest req = validReq(Set.of(100L), 10L, 20L);
 
-        given(creatorRepository.findById(1L))
+        given(creatorRepository.findByMemberId(memberId))
                 .willReturn(Optional.of(mock(Creator.class)));
 
         given(fileObjectRepository.findById(10L))
                 .willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> creationService.createCreation(req))
+        assertThatThrownBy(() -> creationService.createCreation(req, memberId))
                 .isInstanceOf(FileObjectNotFoundException.class);
 
         then(fileObjectRepository).should(never()).findByStorageKeyIn(anyList());
@@ -168,13 +167,13 @@ class CreationServiceTest {
     @Test
     @DisplayName("createCreation 실패: 썸네일 7개 중 누락 있으면 FileObjectNotFoundException")
     void createCreation_thumbnailMissing() {
-        long creatorId = 1L;
+        long memberId = 1L;
         long horizontalId = 10L;
         long posterId = 20L;
 
-        CreationRequest req = validReq(creatorId, Set.of(100L), horizontalId, posterId);
+        CreationRequest req = validReq(Set.of(100L), horizontalId, posterId);
 
-        given(creatorRepository.findById(creatorId)).willReturn(Optional.of(mock(Creator.class)));
+        given(creatorRepository.findByMemberId(memberId)).willReturn(Optional.of(mock(Creator.class)));
 
         String baseKey = "upload/2026/01/27/creation-missing";
         FileObject horizontalOriginal = mock(FileObject.class);
@@ -191,7 +190,7 @@ class CreationServiceTest {
                         .map(CreationServiceTest::foWithStorageKey)
                         .toList());
 
-        assertThatThrownBy(() -> creationService.createCreation(req))
+        assertThatThrownBy(() -> creationService.createCreation(req, memberId))
                 .isInstanceOf(FileObjectNotFoundException.class);
 
         then(fileObjectRepository).should(never()).findById(posterId);
@@ -201,13 +200,13 @@ class CreationServiceTest {
     @Test
     @DisplayName("createCreation 실패: 포스터 원본 FileObject 없으면 FileObjectNotFoundException")
     void createCreation_posterOriginalNotFound() {
-        long creatorId = 1L;
+        long memberId = 1L;
         long horizontalId = 10L;
         long posterId = 20L;
 
-        CreationRequest req = validReq(creatorId, Set.of(100L), horizontalId, posterId);
+        CreationRequest req = validReq(Set.of(100L), horizontalId, posterId);
 
-        given(creatorRepository.findById(creatorId)).willReturn(Optional.of(mock(Creator.class)));
+        given(creatorRepository.findByMemberId(memberId)).willReturn(Optional.of(mock(Creator.class)));
 
         String baseKey = "upload/2026/01/27/creation-poster";
         FileObject horizontalOriginal = mock(FileObject.class);
@@ -225,7 +224,7 @@ class CreationServiceTest {
         // 포스터 원본 없음
         given(fileObjectRepository.findById(posterId)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> creationService.createCreation(req))
+        assertThatThrownBy(() -> creationService.createCreation(req, memberId))
                 .isInstanceOf(FileObjectNotFoundException.class);
 
         then(creationRepository).should(never()).save(any());
@@ -234,14 +233,14 @@ class CreationServiceTest {
     @Test
     @DisplayName("createCreation 실패: hashtagIds 중 누락이 있으면 IllegalArgumentException")
     void createCreation_hashtagMissing() {
-        long creatorId = 1L;
+        long memberId = 1L;
         long horizontalId = 10L;
         long posterId = 20L;
 
         Set<Long> hashtagIds = Set.of(100L, 101L, 102L);
-        CreationRequest req = validReq(creatorId, hashtagIds, horizontalId, posterId);
+        CreationRequest req = validReq(hashtagIds, horizontalId, posterId);
 
-        given(creatorRepository.findById(creatorId)).willReturn(Optional.of(mock(Creator.class)));
+        given(creatorRepository.findByMemberId(memberId)).willReturn(Optional.of(mock(Creator.class)));
 
         String baseKey = "upload/2026/01/27/creation-hash";
         FileObject horizontalOriginal = mock(FileObject.class);
@@ -264,7 +263,7 @@ class CreationServiceTest {
                         hashtagEntityWithId(101L)
                 ));
 
-        assertThatThrownBy(() -> creationService.createCreation(req))
+        assertThatThrownBy(() -> creationService.createCreation(req, memberId))
                 .isInstanceOf(IllegalArgumentException.class);
 
         then(creationRepository).should(never()).save(any());

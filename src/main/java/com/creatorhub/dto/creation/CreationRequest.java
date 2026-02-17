@@ -11,9 +11,6 @@ import jakarta.validation.constraints.Size;
 import java.util.Set;
 
 public record CreationRequest(
-        @NotNull(message = "creatorId가 존재하지 않습니다.")
-        Long creatorId,
-
         @NotNull(message = "형식은 필수입니다.")
         CreationFormat format,
 
