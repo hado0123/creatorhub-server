@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +22,7 @@ public class CreationFavoriteController {
     /**
      * 관심 등록
      */
+    @PreAuthorize("hasRole('ROLE_MEMBER')")
     @PostMapping("/{creationId}/favorite")
     public ResponseEntity<CreationFavoriteResponse> favorite(
             @AuthenticationPrincipal CustomUserPrincipal principal,
@@ -35,6 +37,7 @@ public class CreationFavoriteController {
     /**
      * 관심 해제
      */
+    @PreAuthorize("hasRole('ROLE_MEMBER')")
     @DeleteMapping("/{creationId}/favorite")
     public ResponseEntity<CreationFavoriteResponse> unfavorite(
             @AuthenticationPrincipal CustomUserPrincipal principal,
@@ -49,6 +52,7 @@ public class CreationFavoriteController {
     /**
      * 내 관심작품 목록
      */
+    @PreAuthorize("hasRole('ROLE_MEMBER')")
     @GetMapping("/me/favorites")
     public ResponseEntity<Page<FavoriteCreationItem>> myFavorites(
             @AuthenticationPrincipal CustomUserPrincipal principal,

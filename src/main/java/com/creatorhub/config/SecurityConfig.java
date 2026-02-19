@@ -67,6 +67,9 @@ public class SecurityConfig {
                         "/api/auth/refresh",
                         "/api/members/signup",
                         "/api/files/resize-complete",
+                        "/api/episodes/creation/{creationId}",
+                        "/api/creations/by-days",
+                        "/api/creations/{creationId}",
                         "/error"
                 ).permitAll()
                 .anyRequest().authenticated()

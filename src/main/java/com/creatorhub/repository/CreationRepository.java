@@ -1,28 +1,37 @@
 package com.creatorhub.repository;
 
+import com.creatorhub.constant.CreationThumbnailType;
 import com.creatorhub.entity.Creation;
+import com.creatorhub.repository.projection.CreationBaseProjection;
+import com.creatorhub.repository.projection.CreationListProjection;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CreationRepository extends JpaRepository<Creation, Long> {
 
     @Query("""
-        SELECT DISTINCT c FROM Creation c
-        LEFT JOIN FETCH c.creationThumbnails ct
-        LEFT JOIN FETCH ct.fileObject
+        SELECT
+            c.id AS creationId,
+            c.title AS title,
+            fo.storageKey AS storageKey
+        FROM Creation c
+        LEFT JOIN c.creationThumbnails ct
+            ON ct.type = :type AND ct.displayOrder = 0
+        LEFT JOIN ct.fileObject fo
         WHERE c.creator.id = :creatorId
         ORDER BY c.id DESC
     """)
-    List<Creation> findAllByCreatorIdWithThumbnails(@Param("creatorId") Long creatorId);
+    List<CreationListProjection> findAllByCreatorIdWithThumbnails(
+            @Param("creatorId") Long creatorId,
+            @Param("type") CreationThumbnailType type
+    );
 
-
-    // JPA 엔티티 방식으로 작업시 읽기 -> 계산 -> 쓰기 방식으로 진행되기 때문에 동시 요청시 favoriteCount값이 -1이 될 수 있음
-    // 이를 방지하기 위해 UPDATE 쿼리에서 증감 연산을 수행해 DB에서 원자성을 보장하도록 구현
-    // 동시에 favoriteCount값이 0 아래로 더 이상 감소되지 않도록 처리
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         UPDATE Creation c
@@ -34,8 +43,40 @@ public interface CreationRepository extends JpaRepository<Creation, Long> {
                END
          WHERE c.id = :creationId
     """)
-    void updateFavoriteCount(@Param("creationId") Long creationId,
-                                  @Param("delta") int delta);
+    void updateFavoriteCount(@Param("creationId") Long creationId, @Param("delta") int delta);
 
+    @Query("""
+        SELECT c.id
+        FROM Creation c
+        WHERE c.isPublic = TRUE
+        ORDER BY c.id DESC
+    """)
+    List<Long> findPublicCreationIdsOrderByIdDesc();
+
+    @EntityGraph(attributePaths = {"publishDays"})
+    @Query("""
+        SELECT DISTINCT c
+        FROM Creation c
+        WHERE c.id IN :ids
+    """)
+    List<Creation> findWithPublishDaysByIdIn(@Param("ids") List<Long> ids);
+
+    @Query("""
+        select
+            c.id as creationId,
+            c.title as title,
+            c.plot as plot,
+            cr.creatorName as creatorName,
+            fo.storageKey as storageKey
+        from Creation c
+        join c.creator cr
+        left join c.creationThumbnails ct
+            on ct.type = :posterType and ct.displayOrder = 0
+        left join ct.fileObject fo
+        where c.id = :creationId
+    """)
+    Optional<CreationBaseProjection> findCreationDetailBase(
+            @Param("creationId") Long creationId,
+            @Param("posterType") CreationThumbnailType posterType
+    );
 }
-

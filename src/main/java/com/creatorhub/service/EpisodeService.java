@@ -1,6 +1,8 @@
 package com.creatorhub.service;
 
 
+import com.creatorhub.constant.EpisodeThumbnailType;
+import com.creatorhub.dto.episode.EpisodeListResponse;
 import com.creatorhub.dto.episode.EpisodeRequest;
 import com.creatorhub.dto.episode.EpisodeResponse;
 import com.creatorhub.entity.*;
@@ -9,6 +11,7 @@ import com.creatorhub.exception.episode.AlreadyEpisodeException;
 import com.creatorhub.exception.fileUpload.FileObjectNotFoundException;
 import com.creatorhub.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +28,12 @@ public class EpisodeService {
     private final ManuscriptImageService manuscriptImageService;
     private final EpisodeThumbnailService episodeThumbnailService;
 
+    @Value("${cloud.front.base}")
+    private String cloudfrontBase;
+
+    /**
+     * 회차 등록
+     */
     @Transactional
     public EpisodeResponse publishEpisode(EpisodeRequest req, Long memberId) {
 
@@ -95,4 +104,18 @@ public class EpisodeService {
         return found.stream().collect(Collectors.toMap(FileObject::getId, fo -> fo));
     }
 
+
+    /**
+     * 특정 작품의 모든 회차 조회 (episodeNum 오름차순)
+     */
+    public List<EpisodeListResponse> getEpisodesByCreation(Long creationId) {
+        if (!creationRepository.existsById(creationId)) {
+            throw new CreationNotFoundException("해당 Creation을 찾을 수 없습니다: " + creationId);
+        }
+        return episodeRepository
+                .findEpisodeListProjection(creationId, EpisodeThumbnailType.EPISODE)
+                .stream()
+                .map(p-> EpisodeListResponse.from(p, cloudfrontBase))
+                .toList();
+    }
 }

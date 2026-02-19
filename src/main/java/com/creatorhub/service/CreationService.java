@@ -1,23 +1,28 @@
 package com.creatorhub.service;
 
 import com.creatorhub.constant.CreationThumbnailType;
+import com.creatorhub.constant.PublishDay;
 import com.creatorhub.constant.ThumbnailKeys;
 import com.creatorhub.dto.creation.CreationListResponse;
 import com.creatorhub.dto.creation.CreationRequest;
+import com.creatorhub.dto.creation.CreationResponse;
+import com.creatorhub.dto.creation.CreationsByDayResponse;
 import com.creatorhub.entity.*;
+import com.creatorhub.exception.creation.CreationNotFoundException;
 import com.creatorhub.exception.creator.CreatorNotFoundException;
 import com.creatorhub.exception.fileUpload.FileObjectNotFoundException;
 import com.creatorhub.exception.hashtag.HashtagNotFoundException;
-import com.creatorhub.repository.CreationRepository;
-import com.creatorhub.repository.CreatorRepository;
-import com.creatorhub.repository.FileObjectRepository;
-import com.creatorhub.repository.HashtagRepository;
+import com.creatorhub.repository.*;
+import com.creatorhub.repository.projection.CreationBaseProjection;
+import com.creatorhub.repository.projection.HashtagTitleProjection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,17 +33,15 @@ public class CreationService {
     private final FileObjectRepository fileObjectRepository;
     private final CreatorRepository creatorRepository;
     private final HashtagRepository hashtagRepository;
+    private final CreationThumbnailRepository creationThumbnailRepository;
+    private final CreationHashtagRepository creationHashtagRepository;
 
-    public List<CreationListResponse> getMyCreations(Long memberId) {
-        Creator creator = creatorRepository.findByMemberId(memberId)
-                .orElseThrow(CreatorNotFoundException::new);
+    @Value("${cloud.front.base}")
+    private String cloudfrontBase;
 
-        return creationRepository.findAllByCreatorIdWithThumbnails(creator.getId())
-                .stream()
-                .map(CreationListResponse::from)
-                .toList();
-    }
-
+    /**
+     * 작품 등록
+     */
     @Transactional
     public Long createCreation(CreationRequest req, Long id) {
 
@@ -168,4 +171,106 @@ public class CreationService {
         }
     }
 
+    /**
+     * 하나의 작품 조회
+     */
+    public CreationResponse getCreation(Long creationId) {
+        CreationBaseProjection base = creationRepository
+                .findCreationDetailBase(creationId, CreationThumbnailType.POSTER)
+                .orElseThrow(() ->
+                        new CreationNotFoundException("해당 Creation을 찾을 수 없습니다: " + creationId)
+                );
+
+        List<String> hashtags = creationHashtagRepository
+                .findHashtagTitlesByCreationId(creationId)
+                .stream()
+                .map(HashtagTitleProjection::getTitle)
+                .toList();
+
+        return CreationResponse.from(base, cloudfrontBase, hashtags);
+    }
+
+    /**
+     * 특정 작가가 등록한 모든 작품 조회
+     */
+    public List<CreationListResponse> getMyCreations(Long memberId) {
+        Creator creator = creatorRepository.findByMemberId(memberId)
+                .orElseThrow(CreatorNotFoundException::new);
+
+        return creationRepository
+                .findAllByCreatorIdWithThumbnails(
+                        creator.getId(),
+                        CreationThumbnailType.POSTER
+                )
+                .stream()
+                .map(p -> CreationListResponse.from(p, cloudfrontBase))
+                .toList();
+    }
+
+    /**
+     * 모든 요일별 연재 작품 조회 (한 번에)
+     */
+    public CreationsByDayResponse getAllCreationsByDay() {
+        List<Long> ids = creationRepository.findPublicCreationIdsOrderByIdDesc();
+        if (ids.isEmpty()) {
+            return emptyResponse();
+        }
+
+        // 1. 요일만 로딩
+        List<Creation> creations = creationRepository.findWithPublishDaysByIdIn(ids);
+
+        // 2. 대표 포스터(사이즈 1개)만 로딩
+        List<CreationThumbnail> posters = creationThumbnailRepository
+                .findByCreationIdsAndTypeAndSizeType(
+                        ids,
+                        CreationThumbnailType.POSTER
+                );
+
+        // creationId -> posterUrl
+        Map<Long, String> posterUrlByCreationId = posters.stream()
+                .collect(Collectors.toMap(
+                        ct -> ct.getCreation().getId(),
+                        ct -> cloudfrontBase + "/" +ct.getFileObject().getStorageKey(),
+                        (a, b) -> a
+                ));
+
+        // id -> creation (정렬 유지하려고 맵으로)
+        Map<Long, Creation> creationById = creations.stream()
+                .collect(Collectors.toMap(Creation::getId, Function.identity()));
+
+        EnumMap<PublishDay, List<CreationsByDayResponse.CreationByDayItem>> result =
+                new EnumMap<>(PublishDay.class);
+
+        for (PublishDay day : PublishDay.values()) {
+            result.put(day, new ArrayList<>());
+        }
+
+        // ids 순서대로 처리하면 id desc 정렬 유지됨
+        for (Long id : ids) {
+            Creation c = creationById.get(id);
+            if (c == null) continue;
+
+            var item = new CreationsByDayResponse.CreationByDayItem(
+                    c.getId(),
+                    c.getTitle(),
+                    posterUrlByCreationId.get(c.getId())
+            );
+
+            for (PublishDay day : c.getPublishDays()) {
+                result.get(day).add(item);
+            }
+        }
+
+        return new CreationsByDayResponse(result);
+
+    }
+
+    private CreationsByDayResponse emptyResponse() {
+        EnumMap<PublishDay, List<CreationsByDayResponse.CreationByDayItem>> map =
+                new EnumMap<>(PublishDay.class);
+        for (PublishDay day : PublishDay.values()) {
+            map.put(day, new ArrayList<>());
+        }
+        return new CreationsByDayResponse(map);
+    }
 }

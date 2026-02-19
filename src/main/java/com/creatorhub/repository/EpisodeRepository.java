@@ -1,13 +1,43 @@
 package com.creatorhub.repository;
 
+import com.creatorhub.constant.EpisodeThumbnailType;
 import com.creatorhub.entity.Episode;
+import com.creatorhub.repository.projection.EpisodeListProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface EpisodeRepository extends JpaRepository<Episode, Long> {
     boolean existsByCreationIdAndEpisodeNum(Long creationId, Integer episodeNum);
+
+    @Query("""
+    select
+        e.id as id,
+        e.episodeNum as episodeNum,
+        e.title as title,
+        e.creatorNote as creatorNote,
+        e.isCommentEnabled as isCommentEnabled,
+        e.isPublic as isPublic,
+        e.likeCount as likeCount,
+        e.favoriteCount as favoriteCount,
+        e.ratingCount as ratingCount,
+        e.ratingAverage as ratingAverage,
+        fo.storageKey as storageKey,
+        e.createdAt as createdAt
+    from Episode e
+    left join e.episodeThumbnails t
+        on t.type = :type
+    left join t.fileObject fo
+    where e.creation.id = :creationId
+    order by e.episodeNum asc
+""")
+    List<EpisodeListProjection> findEpisodeListProjection(
+            Long creationId,
+            EpisodeThumbnailType type
+    );
 
     // JPA 엔티티 방식으로 작업시 읽기 -> 계산 -> 쓰기 방식으로 진행되기 때문에 동시 요청시 likeCount값이 -1이 될 수 있음
     // 이를 방지하기 위해 UPDATE 쿼리에서 증감 연산을 수행해 DB에서 원자성을 보장하도록 구현
