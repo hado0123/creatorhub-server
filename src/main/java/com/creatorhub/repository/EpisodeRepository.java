@@ -3,12 +3,14 @@ package com.creatorhub.repository;
 import com.creatorhub.constant.EpisodeThumbnailType;
 import com.creatorhub.entity.Episode;
 import com.creatorhub.repository.projection.EpisodeListProjection;
+import com.creatorhub.repository.projection.EpisodeMetaProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface EpisodeRepository extends JpaRepository<Episode, Long> {
     boolean existsByCreationIdAndEpisodeNum(Long creationId, Integer episodeNum);
@@ -37,6 +39,23 @@ public interface EpisodeRepository extends JpaRepository<Episode, Long> {
     List<EpisodeListProjection> findEpisodeListProjection(
             Long creationId,
             EpisodeThumbnailType type
+    );
+
+    @Query("""
+        select
+            e.id as episodeId,
+            e.episodeNum as episodeNum,
+            e.title as title,
+            e.likeCount as likeCount,
+            e.ratingAverage as ratingAverage,
+            e.ratingCount as ratingCount
+        from Episode e
+        where e.id = :episodeId
+          and e.creation.id = :creationId
+    """)
+    Optional<EpisodeMetaProjection> findEpisodeMeta(
+            @Param("creationId") Long creationId,
+            @Param("episodeId") Long episodeId
     );
 
     // JPA 엔티티 방식으로 작업시 읽기 -> 계산 -> 쓰기 방식으로 진행되기 때문에 동시 요청시 likeCount값이 -1이 될 수 있음

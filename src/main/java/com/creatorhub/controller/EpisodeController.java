@@ -1,5 +1,6 @@
 package com.creatorhub.controller;
 
+import com.creatorhub.dto.episode.EpisodeDetailResponse;
 import com.creatorhub.dto.episode.EpisodeListResponse;
 import com.creatorhub.dto.episode.EpisodeRequest;
 import com.creatorhub.dto.episode.EpisodeResponse;
@@ -43,5 +44,16 @@ public class EpisodeController {
     ) {
         List<EpisodeListResponse> res = episodeService.getEpisodesByCreation(creationId);
         return ResponseEntity.ok(res);
+    }
+
+    /**
+     * 특정 작품의 회차 원고 조회
+     */
+    @GetMapping("/{creationId}/detail/{episodeId}")
+    public EpisodeDetailResponse getEpisodeDetail(
+            @PathVariable Long creationId,
+            @PathVariable Long episodeId
+    ) {
+        return episodeService.getEpisodeDetail(creationId, episodeId);
     }
 }

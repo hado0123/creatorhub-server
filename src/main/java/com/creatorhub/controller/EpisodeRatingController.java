@@ -7,6 +7,7 @@ import com.creatorhub.service.EpisodeRatingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +22,7 @@ public class EpisodeRatingController {
     /**
      * 별점 등록
      */
+    @PreAuthorize("hasRole('ROLE_MEMBER')")
     @PostMapping("/create")
     public ResponseEntity<Void> rate(
             @AuthenticationPrincipal CustomUserPrincipal principal,

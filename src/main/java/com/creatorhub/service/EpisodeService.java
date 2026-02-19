@@ -2,14 +2,18 @@ package com.creatorhub.service;
 
 
 import com.creatorhub.constant.EpisodeThumbnailType;
+import com.creatorhub.dto.episode.EpisodeDetailResponse;
 import com.creatorhub.dto.episode.EpisodeListResponse;
 import com.creatorhub.dto.episode.EpisodeRequest;
 import com.creatorhub.dto.episode.EpisodeResponse;
 import com.creatorhub.entity.*;
 import com.creatorhub.exception.creation.CreationNotFoundException;
 import com.creatorhub.exception.episode.AlreadyEpisodeException;
+import com.creatorhub.exception.episode.EpisodeNotFoundException;
 import com.creatorhub.exception.fileUpload.FileObjectNotFoundException;
 import com.creatorhub.repository.*;
+import com.creatorhub.repository.projection.EpisodeMetaProjection;
+import com.creatorhub.repository.projection.ManuscriptRowProjection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
@@ -25,6 +29,7 @@ public class EpisodeService {
     private final CreationRepository creationRepository;
     private final EpisodeRepository episodeRepository;
     private final FileObjectRepository fileObjectRepository;
+    private final ManuscriptImageRepository manuscriptImageRepository;
     private final ManuscriptImageService manuscriptImageService;
     private final EpisodeThumbnailService episodeThumbnailService;
 
@@ -118,4 +123,29 @@ public class EpisodeService {
                 .map(p-> EpisodeListResponse.from(p, cloudfrontBase))
                 .toList();
     }
+
+
+    /**
+     * 특정 작품의 회차 원고 조회
+     */
+    public EpisodeDetailResponse getEpisodeDetail(
+            Long creationId,
+            Long episodeId
+    ) {
+
+        EpisodeMetaProjection meta = episodeRepository
+                .findEpisodeMeta(creationId, episodeId)
+                .orElseThrow(() ->
+                        new EpisodeNotFoundException("해당 작품의 회차를 찾을 수 없습니다: " + episodeId)
+                );
+
+        List<String> storageKeys = manuscriptImageRepository
+                .findManuscripts(creationId, episodeId)
+                .stream()
+                .map(ManuscriptRowProjection::getStorageKey)
+                .toList();
+
+        return EpisodeDetailResponse.from(meta, cloudfrontBase, storageKeys);
+    }
+
 }

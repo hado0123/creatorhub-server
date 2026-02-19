@@ -68,6 +68,7 @@ public class SecurityConfig {
                         "/api/members/signup",
                         "/api/files/resize-complete",
                         "/api/episodes/creation/{creationId}",
+                        "/api/episodes/{creationId}/detail/{episodeId}",
                         "/api/creations/by-days",
                         "/api/creations/{creationId}",
                         "/error"
