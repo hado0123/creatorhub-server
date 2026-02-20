@@ -1,7 +1,6 @@
 package com.creatorhub.service;
 
 import com.creatorhub.constant.ErrorCode;
-import com.creatorhub.dto.auth.LoginResponse;
 import com.creatorhub.dto.auth.RefreshTokenPayload;
 import com.creatorhub.dto.auth.TokenPair;
 import com.creatorhub.dto.auth.TokenPayload;
@@ -25,34 +24,35 @@ public class AuthService {
     private final JWTUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
 
-
     /**
      * 로그인: 인증 + 토큰 발급
      */
-    public LoginResponse login(String email, String rawPassword) {
-
-        // 1) 이메일/비번 검증 (실제 로그인)
+    public TokenPair login(String email, String rawPassword) {
         TokenPayload payload = memberService.authenticate(email, rawPassword);
 
-        // 2) 토큰 발급
         String accessToken = jwtUtil.createAccessToken(payload);
         String refreshToken = jwtUtil.createRefreshToken(RefreshTokenPayload.from(payload));
 
-        // 3) Refresh 토큰 Redis 저장
         refreshTokenService.saveRefreshToken(payload.id(), refreshToken);
 
         log.debug("로그인 성공 - memberId={}, role={}", payload.id(), payload.role());
 
-        TokenPair tokenPair = new TokenPair(accessToken, refreshToken);
-        return LoginResponse.of(tokenPair, payload);
+        return TokenPair.of(accessToken, refreshToken);
     }
 
     /**
-     * Refresh 토큰 기반 재발급
+     * email로 TokenPayload 조회 (로그인 후 member 정보 반환용)
+     */
+    public TokenPayload getTokenPayload(String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(MemberNotFoundException::new);
+        return TokenPayload.from(member);
+    }
+
+    /**
+     * Refresh 토큰 기반 재발급 (쿠키에서 전달받은 refreshToken)
      */
     public TokenPair refresh(String refreshToken) {
-
-        // 1) Refresh 토큰 검증
         RefreshTokenPayload refreshPayload;
         try {
             refreshPayload = jwtUtil.validateRefreshToken(refreshToken);
@@ -64,27 +64,23 @@ public class AuthService {
 
         Long id = refreshPayload.id();
 
-        // 2) Redis에 저장된 Refresh 토큰과 일치하는지 확인
         String storedRefreshToken = refreshTokenService.getRefreshToken(id);
         if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
             throw new JwtAuthenticationException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        // 3) 유저 정보 조회
         Member member = memberRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
         TokenPayload newPayload = TokenPayload.from(member);
 
-        // 4) 새 토큰 발급 (refresh 토큰도 새로 갱신)
         String newAccessToken = jwtUtil.createAccessToken(newPayload);
         String newRefreshToken = jwtUtil.createRefreshToken(RefreshTokenPayload.from(newPayload));
 
-        // 5) Redis 갱신 (이전 refresh는 자동 폐기)
         refreshTokenService.saveRefreshToken(id, newRefreshToken);
 
         log.debug("토큰 재발급 성공 - memberId={}", id);
 
-        return new TokenPair(newAccessToken, newRefreshToken);
+        return TokenPair.of(newAccessToken, newRefreshToken);
     }
 
     /**

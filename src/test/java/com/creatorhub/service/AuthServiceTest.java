@@ -2,7 +2,6 @@ package com.creatorhub.service;
 
 import com.creatorhub.constant.ErrorCode;
 import com.creatorhub.constant.Role;
-import com.creatorhub.dto.auth.LoginResponse;
 import com.creatorhub.dto.auth.RefreshTokenPayload;
 import com.creatorhub.dto.auth.TokenPair;
 import com.creatorhub.dto.auth.TokenPayload;
@@ -49,7 +48,7 @@ class AuthServiceTest {
         given(jwtUtil.createAccessToken(payload)).willReturn("ACCESS");
         given(jwtUtil.createRefreshToken(any(RefreshTokenPayload.class))).willReturn("REFRESH");
 
-        LoginResponse result = authService.login(email, rawPassword);
+        TokenPair result = authService.login(email, rawPassword);
 
         assertThat(result.accessToken()).isEqualTo("ACCESS");
         assertThat(result.refreshToken()).isEqualTo("REFRESH");

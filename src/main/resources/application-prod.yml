@@ -56,3 +56,6 @@ file:
 cors:
   client:
     url: ${CORS_CLIENT_URL}
+app:
+  cookie:
+    secure: true
