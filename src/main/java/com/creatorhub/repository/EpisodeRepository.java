@@ -16,25 +16,20 @@ public interface EpisodeRepository extends JpaRepository<Episode, Long> {
     boolean existsByCreationIdAndEpisodeNum(Long creationId, Integer episodeNum);
 
     @Query("""
-    select
-        e.id as id,
-        e.episodeNum as episodeNum,
-        e.title as title,
-        e.creatorNote as creatorNote,
-        e.isCommentEnabled as isCommentEnabled,
-        e.isPublic as isPublic,
-        e.likeCount as likeCount,
-        e.favoriteCount as favoriteCount,
-        e.ratingCount as ratingCount,
-        e.ratingAverage as ratingAverage,
-        fo.storageKey as storageKey,
-        e.createdAt as createdAt
-    from Episode e
-    left join e.episodeThumbnails t
-        on t.type = :type
-    left join t.fileObject fo
-    where e.creation.id = :creationId
-    order by e.episodeNum asc
+    SELECT
+        e.id AS id,
+        e.episodeNum AS episodeNum,
+        e.title AS title,
+        e.isPublic AS isPublic,
+        e.ratingAverage AS ratingAverage,
+        fo.storageKey AS storageKey,
+        e.createdAt AS createdAt
+    FROM Episode e
+    LEFT JOIN e.episodeThumbnails t
+        ON t.type = :type
+    LEFT JOIN t.fileObject fo
+    WHERE e.creation.id = :creationId
+    ORDER BY e.episodeNum ASC
 """)
     List<EpisodeListProjection> findEpisodeListProjection(
             Long creationId,
@@ -42,16 +37,16 @@ public interface EpisodeRepository extends JpaRepository<Episode, Long> {
     );
 
     @Query("""
-        select
-            e.id as episodeId,
-            e.episodeNum as episodeNum,
-            e.title as title,
-            e.likeCount as likeCount,
-            e.ratingAverage as ratingAverage,
-            e.ratingCount as ratingCount
-        from Episode e
-        where e.id = :episodeId
-          and e.creation.id = :creationId
+        SELECT
+            e.id AS episodeId,
+            e.episodeNum AS episodeNum,
+            e.title AS title,
+            e.likeCount AS likeCount,
+            e.ratingAverage AS ratingAverage,
+            e.ratingCount AS ratingCount
+        FROM Episode e
+        WHERE e.id = :episodeId
+          AND e.creation.id = :creationId
     """)
     Optional<EpisodeMetaProjection> findEpisodeMeta(
             @Param("creationId") Long creationId,
