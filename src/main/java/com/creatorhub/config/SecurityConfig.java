@@ -71,6 +71,8 @@ public class SecurityConfig {
                         "/api/episodes/{creationId}/detail/{episodeId}",
                         "/api/creations/by-days",
                         "/api/creations/{creationId}",
+                        "/actuator",
+                        "/actuator/**",
                         "/error"
                 ).permitAll()
                 .anyRequest().authenticated()
