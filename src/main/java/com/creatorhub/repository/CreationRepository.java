@@ -62,18 +62,18 @@ public interface CreationRepository extends JpaRepository<Creation, Long> {
     List<Creation> findWithPublishDaysByIdIn(@Param("ids") List<Long> ids);
 
     @Query("""
-        select
-            c.id as creationId,
-            c.title as title,
-            c.plot as plot,
-            cr.creatorName as creatorName,
-            fo.storageKey as storageKey
-        from Creation c
-        join c.creator cr
-        left join c.creationThumbnails ct
-            on ct.type = :posterType and ct.displayOrder = 0
-        left join ct.fileObject fo
-        where c.id = :creationId
+        SELECT
+            c.id AS creationId,
+            c.title AS title,
+            c.plot AS plot,
+            cr.creatorName AS creatorName,
+            fo.storageKey AS storageKey
+        FROM Creation c
+        JOIN c.creator cr
+        LEFT JOIN c.creationThumbnails ct
+            ON ct.type = :posterType AND ct.displayOrder = 0
+        LEFT JOIN ct.fileObject fo
+        WHERE c.id = :creationId
     """)
     Optional<CreationBaseProjection> findCreationDetailBase(
             @Param("creationId") Long creationId,

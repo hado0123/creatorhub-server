@@ -11,11 +11,11 @@ import java.util.List;
 public interface CreationHashtagRepository extends JpaRepository<CreationHashtag, Long> {
 
     @Query("""
-        select h.title as title
-        from CreationHashtag ch
-        join ch.hashtag h
-        where ch.creation.id = :creationId
-        order by h.title asc
+        SELECT h.title AS title
+        FROM CreationHashtag ch
+        JOIN ch.hashtag h
+        WHERE ch.creation.id = :creationId
+        ORDER BY h.title ASC
     """)
     List<HashtagTitleProjection> findHashtagTitlesByCreationId(@Param("creationId") Long creationId);
 }

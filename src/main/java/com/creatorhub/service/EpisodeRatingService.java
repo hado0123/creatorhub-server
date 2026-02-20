@@ -22,7 +22,7 @@ public class EpisodeRatingService {
     private final MemberRepository memberRepository;
 
     /**
-     * 별점 등록
+     * (회차별) 별점 등록
      */
     @Transactional
     public void rate(Long memberId, Long episodeId, int score) {

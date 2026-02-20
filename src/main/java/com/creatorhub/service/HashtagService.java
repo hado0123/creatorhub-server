@@ -15,7 +15,9 @@ public class HashtagService {
 
     private final HashtagRepository hashtagRepository;
 
-    /** 전체 해시태그 목록 조회 */
+    /**
+     * 전체 해시태그 목록 조회
+     */
     public List<HashtagResponse> getAllHashtags() {
         return hashtagRepository.findAll().stream()
                 .map(HashtagResponse::from)

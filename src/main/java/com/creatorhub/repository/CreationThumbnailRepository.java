@@ -11,12 +11,12 @@ import java.util.List;
 public interface CreationThumbnailRepository extends JpaRepository<CreationThumbnail, Long> {
 
     @Query("""
-        select ct
-        from CreationThumbnail ct
-        join fetch ct.fileObject fo
-        join fetch ct.creation c
-        where c.id in :ids
-          and ct.type = :type
+        SELECT ct
+        FROM CreationThumbnail ct
+        JOIN FETCH ct.fileObject fo
+        JOIN FETCH ct.creation c
+        WHERE c.id IN :ids
+          AND ct.type = :type
     """)
     List<CreationThumbnail> findByCreationIdsAndTypeAndSizeType(
             @Param("ids") List<Long> ids,

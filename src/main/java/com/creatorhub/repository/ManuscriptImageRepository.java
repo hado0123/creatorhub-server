@@ -10,14 +10,14 @@ import java.util.List;
 
 public interface ManuscriptImageRepository extends JpaRepository<ManuscriptImage, Long> {
     @Query("""
-        select
-            mi.displayOrder as displayOrder,
-            fo.storageKey as storageKey
-        from ManuscriptImage mi
-        join mi.fileObject fo
-        where mi.episode.id = :episodeId
-          and mi.episode.creation.id = :creationId
-        order by mi.displayOrder asc
+        SELECT
+            mi.displayOrder AS displayOrder,
+            fo.storageKey AS storageKey
+        FROM ManuscriptImage mi
+        JOIN mi.fileObject fo
+        WHERE mi.episode.id = :episodeId
+          AND mi.episode.creation.id = :creationId
+        ORDER BY mi.displayOrder ASC
     """)
     List<ManuscriptRowProjection> findManuscripts(
             @Param("creationId") Long creationId,
