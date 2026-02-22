@@ -2,6 +2,7 @@ package com.creatorhub.service;
 
 import com.creatorhub.constant.ErrorCode;
 import com.creatorhub.constant.Role;
+import com.creatorhub.dto.auth.RefreshResult;
 import com.creatorhub.dto.auth.RefreshTokenPayload;
 import com.creatorhub.dto.auth.TokenPair;
 import com.creatorhub.dto.auth.TokenPayload;
@@ -38,6 +39,7 @@ class AuthServiceTest {
     void loginSuccess() {
         String email = "test@test.com";
         String rawPassword = "pw1234";
+        boolean keepLogin = false;
 
         TokenPayload payload = mock(TokenPayload.class);
         given(payload.id()).willReturn(1L);
@@ -48,7 +50,7 @@ class AuthServiceTest {
         given(jwtUtil.createAccessToken(payload)).willReturn("ACCESS");
         given(jwtUtil.createRefreshToken(any(RefreshTokenPayload.class))).willReturn("REFRESH");
 
-        TokenPair result = authService.login(email, rawPassword);
+        TokenPair result = authService.login(email, rawPassword, keepLogin);
 
         assertThat(result.accessToken()).isEqualTo("ACCESS");
         assertThat(result.refreshToken()).isEqualTo("REFRESH");
@@ -175,7 +177,7 @@ class AuthServiceTest {
         given(jwtUtil.createAccessToken(any(TokenPayload.class))).willReturn("NEW_ACCESS");
         given(jwtUtil.createRefreshToken(any(RefreshTokenPayload.class))).willReturn("NEW_REFRESH");
 
-        TokenPair result = authService.refresh(refreshToken);
+        RefreshResult result = authService.refresh(refreshToken);
 
         assertThat(result.accessToken()).isEqualTo("NEW_ACCESS");
         assertThat(result.refreshToken()).isEqualTo("NEW_REFRESH");

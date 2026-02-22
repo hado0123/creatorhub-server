@@ -1,6 +1,7 @@
 package com.creatorhub.service;
 
 import com.creatorhub.constant.ErrorCode;
+import com.creatorhub.dto.auth.RefreshResult;
 import com.creatorhub.dto.auth.RefreshTokenPayload;
 import com.creatorhub.dto.auth.TokenPair;
 import com.creatorhub.dto.auth.TokenPayload;
@@ -27,11 +28,13 @@ public class AuthService {
     /**
      * 로그인: 인증 + 토큰 발급
      */
-    public TokenPair login(String email, String rawPassword) {
+    public TokenPair login(String email, String rawPassword, boolean keepLogin) {
         TokenPayload payload = memberService.authenticate(email, rawPassword);
 
         String accessToken = jwtUtil.createAccessToken(payload);
-        String refreshToken = jwtUtil.createRefreshToken(RefreshTokenPayload.from(payload));
+        String refreshToken = jwtUtil.createRefreshToken(
+                RefreshTokenPayload.from(payload, keepLogin)
+        );
 
         refreshTokenService.saveRefreshToken(payload.id(), refreshToken);
 
@@ -52,7 +55,7 @@ public class AuthService {
     /**
      * Refresh 토큰 기반 재발급 (쿠키에서 전달받은 refreshToken)
      */
-    public TokenPair refresh(String refreshToken) {
+    public RefreshResult refresh(String refreshToken) {
         RefreshTokenPayload refreshPayload;
         try {
             refreshPayload = jwtUtil.validateRefreshToken(refreshToken);
@@ -63,6 +66,7 @@ public class AuthService {
         }
 
         Long id = refreshPayload.id();
+        boolean keepLogin = refreshPayload.keepLogin();
 
         String storedRefreshToken = refreshTokenService.getRefreshToken(id);
         if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
@@ -74,13 +78,15 @@ public class AuthService {
         TokenPayload newPayload = TokenPayload.from(member);
 
         String newAccessToken = jwtUtil.createAccessToken(newPayload);
-        String newRefreshToken = jwtUtil.createRefreshToken(RefreshTokenPayload.from(newPayload));
 
+        String newRefreshToken = jwtUtil.createRefreshToken(
+                RefreshTokenPayload.from(newPayload, keepLogin)
+        );
         refreshTokenService.saveRefreshToken(id, newRefreshToken);
 
         log.debug("토큰 재발급 성공 - memberId={}", id);
 
-        return TokenPair.of(newAccessToken, newRefreshToken);
+        return RefreshResult.of(newAccessToken, newRefreshToken, keepLogin);
     }
 
     /**

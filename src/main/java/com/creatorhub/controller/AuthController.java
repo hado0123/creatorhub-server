@@ -2,6 +2,7 @@ package com.creatorhub.controller;
 
 import com.creatorhub.dto.auth.LoginRequest;
 import com.creatorhub.dto.auth.LoginResponse;
+import com.creatorhub.dto.auth.RefreshResult;
 import com.creatorhub.dto.auth.TokenPair;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.service.AuthService;
@@ -41,9 +42,12 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
-        TokenPair tokenPair = authService.login(req.email(), req.password());
+        TokenPair tokenPair = authService.login(req.email(), req.password(), req.keepLogin());
 
-        int maxAge = req.keepLogin() ? (int) (refreshTokenExpDays * 24 * 60 * 60) : SESSION_COOKIE;
+        int maxAge = req.keepLogin()
+                ? (int) (refreshTokenExpDays * 24 * 60 * 60)
+                : SESSION_COOKIE;
+
         ResponseCookie refreshCookie = buildRefreshCookie(tokenPair.refreshToken(), maxAge);
         LoginResponse body = LoginResponse.of(tokenPair.accessToken(), authService.getTokenPayload(req.email()));
 
@@ -64,13 +68,17 @@ public class AuthController {
             return ResponseEntity.noContent().build();
         }
 
-        TokenPair tokenPair = authService.refresh(refreshToken);
-        // refresh 시엔 기존 쿠키 만료일 유지: 남은 기간을 알 수 없으므로 refreshTokenExpDays 그대로 연장
-        ResponseCookie refreshCookie = buildRefreshCookie(tokenPair.refreshToken(), (int)(refreshTokenExpDays * 24 * 60 * 60));
+        RefreshResult result  = authService.refresh(refreshToken);
+
+        int maxAge = result.keepLogin()
+                ? (int)(refreshTokenExpDays * 24 * 60 * 60)
+                : SESSION_COOKIE;
+
+        ResponseCookie refreshCookie = buildRefreshCookie(result.refreshToken(), maxAge);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(new TokenPair(tokenPair.accessToken(), null));
+                .body(new TokenPair(result.accessToken(), null));
     }
 
     /**
