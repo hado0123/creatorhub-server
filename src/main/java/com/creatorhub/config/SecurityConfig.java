@@ -67,10 +67,10 @@ public class SecurityConfig {
                         "/api/auth/refresh",
                         "/api/members/signup",
                         "/api/files/resize-complete",
-                        "/api/episodes/creation/{creationId}",
-                        "/api/episodes/{creationId}/detail/{episodeId}",
+                        "/api/episodes/creation/*",
+                        "/api/episodes/*/detail/*",
                         "/api/creations/by-days",
-                        "/api/creations/{creationId}",
+                        "/api/creations/*",
                         "/error"
                 ).permitAll()
                 .anyRequest().authenticated()
