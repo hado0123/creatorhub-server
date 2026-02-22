@@ -20,7 +20,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -31,22 +30,6 @@ import java.util.List;
 public class JWTCheckFilter extends OncePerRequestFilter {
     private final JWTUtil jwtUtil;
     private final AuthenticationEntryPoint authenticationEntryPoint;
-    private static final AntPathMatcher pathMatcher = new AntPathMatcher();
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getServletPath();
-
-        // 토큰 없이 접근 허용할 경로들
-        return path.equals("/api/auth/login")          // 로그인
-                || path.equals("/api/auth/refresh")    // 토큰 재발급
-                || path.equals("/api/members/signup") // 회원가입
-                || path.equals("/api/files/resize-complete") // 이미지 리사이즈 완료 콜백
-                || pathMatcher.match("/api/episodes/creation/*", path) // 에피소드 목록
-                || pathMatcher.match("/api/episodes/*/detail/*", path) // 에피소드 상세 페이지
-                || path.equals("/api/creations/by-days") // 요일별 웹툰 목록
-                || pathMatcher.match("/api/creations/*", path); // 작품 정보
-    }
 
     @Override
     protected void doFilterInternal(
