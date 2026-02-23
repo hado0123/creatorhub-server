@@ -127,8 +127,9 @@ public class EpisodeService {
 
 
     /**
-     * 특정 작품의 회차 원고 조회
+     * 특정 작품의 회차 원고 조회 + 조회수 증가
      */
+    @Transactional
     public EpisodeDetailResponse getEpisodeDetail(
             Long creationId,
             Long episodeId
@@ -145,6 +146,8 @@ public class EpisodeService {
                 .stream()
                 .map(ManuscriptRowProjection::getStorageKey)
                 .toList();
+
+        episodeRepository.incrementViewCount(episodeId);
 
         return EpisodeDetailResponse.from(meta, cloudfrontBase, storageKeys);
     }
