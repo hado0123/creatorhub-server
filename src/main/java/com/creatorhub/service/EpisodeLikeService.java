@@ -46,6 +46,14 @@ public class EpisodeLikeService {
     }
 
     /**
+     * (회차별) 좋아요 여부 조회
+     */
+    public EpisodeLikeResponse getLikeStatus(Long memberId, Long episodeId) {
+        boolean liked = episodeLikeRepository.existsByMemberIdAndEpisodeId(memberId, episodeId);
+        return EpisodeLikeResponse.of(episodeId, liked);
+    }
+
+    /**
      * (회차별) 좋아요 해제
      */
     @Transactional

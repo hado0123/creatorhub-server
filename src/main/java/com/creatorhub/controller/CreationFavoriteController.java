@@ -50,6 +50,18 @@ public class CreationFavoriteController {
     }
 
     /**
+     * 관심 여부 조회
+     */
+    @PreAuthorize("hasRole('ROLE_MEMBER')")
+    @GetMapping("/{creationId}/favorite/status")
+    public ResponseEntity<CreationFavoriteResponse> getFavoriteStatus(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
+            @PathVariable Long creationId
+    ) {
+        return ResponseEntity.ok(creationFavoriteService.getFavoriteStatus(principal.id(), creationId));
+    }
+
+    /**
      * 내 관심작품 목록
      */
     @PreAuthorize("hasRole('ROLE_MEMBER')")
