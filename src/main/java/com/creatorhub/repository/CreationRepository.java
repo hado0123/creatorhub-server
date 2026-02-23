@@ -55,6 +55,13 @@ public interface CreationRepository extends JpaRepository<Creation, Long> {
     List<Creation> findByIdIn(@Param("ids") List<Long> ids);
 
     @Query("""
+        SELECT c.creator.member.id
+        FROM Creation c
+        WHERE c.id = :creationId
+    """)
+    Optional<Long> findOwnerMemberIdByCreationId(@Param("creationId") Long creationId);
+
+    @Query("""
         SELECT
             c.id AS creationId,
             c.title AS title,
