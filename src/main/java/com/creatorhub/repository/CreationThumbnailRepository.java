@@ -18,7 +18,7 @@ public interface CreationThumbnailRepository extends JpaRepository<CreationThumb
         WHERE c.id IN :ids
           AND ct.type = :type
     """)
-    List<CreationThumbnail> findByCreationIdsAndTypeAndSizeType(
+    List<CreationThumbnail> findPostersByCreationIds(
             @Param("ids") List<Long> ids,
             @Param("type") CreationThumbnailType type
     );
