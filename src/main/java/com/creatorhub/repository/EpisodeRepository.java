@@ -70,6 +70,14 @@ public interface EpisodeRepository extends JpaRepository<Episode, Long> {
     void updateLikeCount(@Param("episodeId") Long episodeId,
                               @Param("delta") int delta);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        UPDATE Episode e
+           SET e.viewCount = COALESCE(e.viewCount, 0) + 1
+         WHERE e.id = :episodeId
+    """)
+    void incrementViewCount(@Param("episodeId") Long episodeId);
+
     // 별점 최초 등록: sum += score, count += 1, average = sum/(count + 1)
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
@@ -77,7 +85,7 @@ public interface EpisodeRepository extends JpaRepository<Episode, Long> {
            SET e.ratingSum = COALESCE(e.ratingSum, 0) + :score,
                e.ratingCount =COALESCE(e.ratingCount, 0) + 1,
                e.ratingAverage = CAST(COALESCE(e.ratingSum, 0) + :score AS bigdecimal)
-                               / CAST(COALESCE(e.ratingCount, 0) + 1 AS bigdecimal)
+                                 / (COALESCE(e.ratingCount, 0) + 1)
            WHERE e.id = :episodeId
     """)
     void addRating(@Param("episodeId") Long episodeId,

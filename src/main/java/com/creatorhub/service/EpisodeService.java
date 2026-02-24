@@ -47,7 +47,8 @@ public class EpisodeService {
                 .orElseThrow(() -> new CreationNotFoundException("해당 Creation을 찾을 수 없습니다: " + req.creationId()));
 
         // 2. 인가 체크(로그인한 사용자가 해당 작품의 작가인지 확인)
-        Long ownerMemberId = creation.getCreator().getMember().getId();
+        Long ownerMemberId = creationRepository.findOwnerMemberIdByCreationId(req.creationId())
+                .orElseThrow(() -> new CreationNotFoundException("해당 Creation을 찾을 수 없습니다: " + req.creationId()));
         if (!ownerMemberId.equals(memberId)) {
             throw new AccessDeniedException("해당 작품에 대한 회차 등록 권한이 없습니다.");
         }
@@ -126,8 +127,9 @@ public class EpisodeService {
 
 
     /**
-     * 특정 작품의 회차 원고 조회
+     * 특정 작품의 회차 원고 조회 + 조회수 증가
      */
+    @Transactional
     public EpisodeDetailResponse getEpisodeDetail(
             Long creationId,
             Long episodeId
@@ -144,6 +146,8 @@ public class EpisodeService {
                 .stream()
                 .map(ManuscriptRowProjection::getStorageKey)
                 .toList();
+
+        episodeRepository.incrementViewCount(episodeId);
 
         return EpisodeDetailResponse.from(meta, cloudfrontBase, storageKeys);
     }

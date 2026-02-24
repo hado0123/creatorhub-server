@@ -46,9 +46,6 @@ public class Member extends BaseSoftDeleteTimeEntity {
     @Column(nullable = false, length = 30, columnDefinition = "VARCHAR(30)")
     private Role role;
 
-    @OneToOne(mappedBy = "member", fetch = FetchType.LAZY)
-    private Creator creator;
-
     @Builder(access = AccessLevel.PRIVATE)
     private Member(String email,
                    String password,

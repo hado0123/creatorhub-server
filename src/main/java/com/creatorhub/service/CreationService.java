@@ -1,12 +1,10 @@
 package com.creatorhub.service;
 
+import com.creatorhub.constant.CreationSort;
 import com.creatorhub.constant.CreationThumbnailType;
 import com.creatorhub.constant.PublishDay;
 import com.creatorhub.constant.ThumbnailKeys;
-import com.creatorhub.dto.creation.CreationListResponse;
-import com.creatorhub.dto.creation.CreationRequest;
-import com.creatorhub.dto.creation.CreationResponse;
-import com.creatorhub.dto.creation.CreationsByDayResponse;
+import com.creatorhub.dto.creation.*;
 import com.creatorhub.entity.*;
 import com.creatorhub.exception.creation.CreationNotFoundException;
 import com.creatorhub.exception.creator.CreatorNotFoundException;
@@ -14,10 +12,13 @@ import com.creatorhub.exception.fileUpload.FileObjectNotFoundException;
 import com.creatorhub.exception.hashtag.HashtagNotFoundException;
 import com.creatorhub.repository.*;
 import com.creatorhub.repository.projection.CreationBaseProjection;
+import com.creatorhub.repository.projection.CreationSeekRow;
 import com.creatorhub.repository.projection.HashtagTitleProjection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -210,67 +211,111 @@ public class CreationService {
     /**
      * 모든 요일별 연재 작품 조회 (한 번에)
      */
-    public CreationsByDayResponse getAllCreationsByDay() {
-        List<Long> ids = creationRepository.findPublicCreationIdsOrderByIdDesc();
-        if (ids.isEmpty()) {
-            return emptyResponse();
+    public CursorSliceResponse<CreationListItem> getCreationsByDay(
+            PublishDay day,
+            CreationSort sort,
+            SeekCursor cursor,
+            int size
+    ) {
+        // 항상 0페이지 + size 만큼만 가져오는 이유:
+        // OFFSET 방식이 아니라 SEEK(커서) 방식이므로
+        // 앞에서 몇 개 건너뛰기가 아니라 조건으로 다음 구간을 가져온다
+        Pageable pageable = PageRequest.of(0, size);
+
+        final Long cursorValue =
+                cursor == null ? null : cursor.value().longValue();
+        final Long cursorId =
+                cursor == null ? null : cursor.id();
+
+        // 1. 정렬 기준에 따라 "집계 + 커서 조건" 쿼리 실행
+        List<CreationSeekRow> rows = switch (sort) {
+            // 조회순
+            case VIEWS -> creationRepository.findByDayOrderByViewsSeek(
+                    day,
+                    // 커서가 없으면 첫 페이지 → null
+                    // 있으면 이전 페이지의 마지막 조회수 합계
+                    cursorValue,
+
+                    // 동점(조회수 동일)일 때 기준이 되는 id
+                    cursorId,
+                    pageable
+            );
+            // 인기순
+            case POPULAR -> creationRepository.findByDayOrderByLikesSeek(
+                    day,
+                    cursorValue,
+                    cursorId,
+                    pageable
+            );
+            // 별점순:
+            // ratingAverage DESC → ratingCount DESC → id DESC
+            case RATING -> creationRepository.findByDayOrderByRatingSeek(
+                    day,
+                    cursor == null ? null : cursor.value(),
+                    cursor == null ? 0L : (cursor.tie() == null ? 0L : cursor.tie()),
+                    cursorId,
+                    pageable
+            );
+        };
+
+        // 2. 더 이상 가져올 데이터가 없는 경우
+        if (rows.isEmpty()) {
+            return new CursorSliceResponse<>(List.of(), false, null);
         }
 
-        // 1. 요일만 로딩
-        List<Creation> creations = creationRepository.findWithPublishDaysByIdIn(ids);
+        // 집계 쿼리는 id + 정렬값만 가져왔기 때문에 실제 화면에 보여줄 title, poster 등을 위해 id 목록 추출
+        List<Long> ids = rows.stream().map(CreationSeekRow::getId).toList();
 
-        // 2. 대표 포스터(사이즈 1개)만 로딩
-        List<CreationThumbnail> posters = creationThumbnailRepository
-                .findByCreationIdsAndTypeAndSizeType(
-                        ids,
-                        CreationThumbnailType.POSTER
-                );
-
-        // creationId -> posterUrl
-        Map<Long, String> posterUrlByCreationId = posters.stream()
-                .collect(Collectors.toMap(
-                        ct -> ct.getCreation().getId(),
-                        ct -> cloudfrontBase + "/" +ct.getFileObject().getStorageKey(),
-                        (a, b) -> a
-                ));
-
-        // id -> creation (정렬 유지하려고 맵으로)
+        // 3. Creation 기본 정보 조회 (title 등)
+        List<Creation> creations = creationRepository.findByIdIn(ids);
         Map<Long, Creation> creationById = creations.stream()
                 .collect(Collectors.toMap(Creation::getId, Function.identity()));
 
-        EnumMap<PublishDay, List<CreationsByDayResponse.CreationByDayItem>> result =
-                new EnumMap<>(PublishDay.class);
+        // 4. 대표 포스터 조회
+        List<CreationThumbnail> posters = creationThumbnailRepository
+                .findPostersByCreationIds(ids, CreationThumbnailType.POSTER);
 
-        for (PublishDay day : PublishDay.values()) {
-            result.put(day, new ArrayList<>());
-        }
+        Map<Long, String> posterUrlByCreationId = posters.stream()
+                .collect(Collectors.toMap(
+                        ct -> ct.getCreation().getId(),
+                        ct -> cloudfrontBase + "/" + ct.getFileObject().getStorageKey(),
+                        (a, b) -> a
+                ));
 
-        // ids 순서대로 처리하면 id desc 정렬 유지됨
+        // 5. ids 순서대로 DTO 생성(집계 쿼리의 정렬 순서를 그대로 유지하기 위함)
+        List<CreationListItem> items = new ArrayList<>(ids.size());
         for (Long id : ids) {
             Creation c = creationById.get(id);
             if (c == null) continue;
 
-            var item = new CreationsByDayResponse.CreationByDayItem(
+            items.add(new CreationListItem(
                     c.getId(),
                     c.getTitle(),
                     posterUrlByCreationId.get(c.getId())
+            ));
+        }
+
+        // 6. 다음 페이지용 커서 생성
+        // 마지막 행이 현재 페이지의 끝
+        CreationSeekRow last = rows.getLast();
+
+        SeekCursor nextCursor = switch (sort) {
+            case VIEWS, POPULAR -> new SeekCursor(
+                    last.getId(),
+                    last.getLongValue().doubleValue(), // 통일
+                    null
             );
+            case RATING -> new SeekCursor(
+                    last.getId(),
+                    last.getDoubleValue(),
+                    last.getTie()
+            );
+        };
 
-            for (PublishDay day : c.getPublishDays()) {
-                result.get(day).add(item);
-            }
-        }
+        // size만큼 꽉 찼으면 다음 페이지가 있을 가능성 있음
+        boolean hasNext = rows.size() == size;
 
-        return new CreationsByDayResponse(result);
-
-    }
-
-    private CreationsByDayResponse emptyResponse() {
-        EnumMap<PublishDay, List<CreationsByDayResponse.CreationByDayItem>> map =
-                new EnumMap<>(PublishDay.class);
-        for (PublishDay day : PublishDay.values()) {
-            map.put(day, new ArrayList<>());
-        }
-        return new CreationsByDayResponse(map);
+        // 7. 최종 반환
+        return new CursorSliceResponse<>(items, hasNext, nextCursor);
     }
 }

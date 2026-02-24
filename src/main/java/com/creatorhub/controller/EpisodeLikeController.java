@@ -31,6 +31,18 @@ public class EpisodeLikeController {
     }
 
     /**
+     * 특정 에피소드 좋아요 여부 조회
+     */
+    @PreAuthorize("hasRole('ROLE_MEMBER')")
+    @GetMapping("/{episodeId}/like/status")
+    public ResponseEntity<EpisodeLikeResponse> getLikeStatus(
+            @AuthenticationPrincipal CustomUserPrincipal principal,
+            @PathVariable Long episodeId
+    ) {
+        return ResponseEntity.ok(episodeLikeService.getLikeStatus(principal.id(), episodeId));
+    }
+
+    /**
      * 특정 에피소드 좋아요 해제
      */
     @PreAuthorize("hasRole('ROLE_MEMBER')")

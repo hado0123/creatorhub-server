@@ -32,20 +32,6 @@ public class JWTCheckFilter extends OncePerRequestFilter {
     private final AuthenticationEntryPoint authenticationEntryPoint;
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getServletPath();
-
-        // 토큰 없이 접근 허용할 경로들
-        return path.equals("/api/auth/login")          // 로그인
-                || path.equals("/api/auth/refresh")    // 토큰 재발급
-                || path.equals("/api/members/signup") // 회원가입
-                || path.equals("/api/files/resize-complete") // 이미지 리사이즈 완료 콜백
-                || path.equals("/api/episodes/creation/{creationId}") // 에피소드 목록
-                || path.equals("/api/creations/by-days") // 요일별 웹툰 목록
-                || path.equals("/api/creations/{creationId}"); // 작품 정보
-    }
-
-    @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,

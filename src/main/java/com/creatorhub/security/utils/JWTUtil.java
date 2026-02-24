@@ -112,7 +112,10 @@ public class JWTUtil {
     public RefreshTokenPayload validateRefreshToken(String token) {
         Claims claims = parseClaims(token, refreshSecretKey);
         Long id = claims.get("id", Long.class);
+        
+        Boolean keepLogin = claims.get("keepLogin", Boolean.class);
+        boolean keepLoginValue = keepLogin != null && keepLogin;
 
-        return new RefreshTokenPayload(id);
+        return new RefreshTokenPayload(id, keepLoginValue);
     }
 }

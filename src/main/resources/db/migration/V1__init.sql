@@ -141,7 +141,7 @@ CREATE TABLE episode (
                          is_comment_enabled BOOLEAN NOT NULL,
                          is_public BOOLEAN NOT NULL,
                          like_count INT,
-                         favorite_count INT,
+                         view_count INT,
                          rating_sum INT,
                          rating_count INT,
                          rating_average DECIMAL(4, 3),

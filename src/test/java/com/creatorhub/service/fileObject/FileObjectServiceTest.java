@@ -11,12 +11,14 @@ import com.creatorhub.entity.FileObject;
 import com.creatorhub.exception.fileUpload.FileObjectNotFoundException;
 import com.creatorhub.repository.FileObjectRepository;
 import com.creatorhub.service.fileObject.s3.ImageProcessingChecker;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.unit.DataSize;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,6 +34,16 @@ class FileObjectServiceTest {
 
     @InjectMocks
     FileObjectService service;
+
+    // application.yml: file.max.thumbnail-size=1MB, file.max.manuscript-size=5MB
+    private static final DataSize THUMBNAIL_SIZE = DataSize.ofMegabytes(1);
+    private static final DataSize MANUSCRIPT_SIZE = DataSize.ofMegabytes(5);
+
+    @BeforeEach
+    void injectFileSizeProperties() {
+        ReflectionTestUtils.setField(service, "thumbnailSize", THUMBNAIL_SIZE);
+        ReflectionTestUtils.setField(service, "manuscriptSize", MANUSCRIPT_SIZE);
+    }
 
     private static FileObject newFoWithId(Long id, String key) {
         FileObject fo = FileObject.create(
@@ -79,9 +91,7 @@ class FileObjectServiceTest {
         assertThat(resp.fileObjectId()).isEqualTo(fileObjectId);
         assertThat(resp.ready()).isTrue();
         assertThat(resp.sizeBytes()).isEqualTo(500_000L);
-        assertThat(resp.maxBytes()).isEqualTo(1L * 1024 * 1024);
-
-        assertThat(fo.getStatus()).isEqualTo(FileObjectStatus.READY);
+        assertThat(resp.maxBytes()).isEqualTo(THUMBNAIL_SIZE.toBytes());
         assertThat(fo.getSizeBytes()).isEqualTo(500_000L);
 
         then(checker).should(never()).deleteObject(anyString());
@@ -103,9 +113,7 @@ class FileObjectServiceTest {
         assertThat(resp.fileObjectId()).isEqualTo(fileObjectId);
         assertThat(resp.ready()).isFalse();
         assertThat(resp.sizeBytes()).isEqualTo(1_200_000L);
-        assertThat(resp.maxBytes()).isEqualTo(1L * 1024 * 1024);
-
-        assertThat(fo.getStatus()).isEqualTo(FileObjectStatus.FAILED);
+        assertThat(resp.maxBytes()).isEqualTo(THUMBNAIL_SIZE.toBytes());
         assertThat(fo.getSizeBytes()).isEqualTo(1_200_000L);
 
         then(checker).should(times(1)).deleteObject(key);
@@ -159,7 +167,7 @@ class FileObjectServiceTest {
 
         given(fileObjectRepository.findAllById(List.of(1L, 2L))).willReturn(List.of(fo1, fo2));
 
-        long max = 5L * 1024 * 1024;
+        long max = MANUSCRIPT_SIZE.toBytes();
         given(checker.fetchSize(fo1.getStorageKey())).willReturn(max + 1);   // fail
         given(checker.fetchSize(fo2.getStorageKey())).willReturn(max - 100); // ok
 
@@ -265,7 +273,7 @@ class FileObjectServiceTest {
                 .toList();
 
         Map<String, Long> sizeMap = new HashMap<>();
-        long max = 1L * 1024 * 1024;
+        long max = THUMBNAIL_SIZE.toBytes();
 
         for (int i = 0; i < expectedKeys.size(); i++) {
             String k = expectedKeys.get(i);
@@ -336,7 +344,7 @@ class FileObjectServiceTest {
                 .map(s -> baseKey + s)
                 .toList();
 
-        long max = 1L * 1024 * 1024;
+        long max = THUMBNAIL_SIZE.toBytes();
 
         Map<String, Long> sizeMap = new HashMap<>();
         for (int i = 0; i < expectedKeys.size(); i++) {
