@@ -16,6 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/files")
@@ -86,6 +87,18 @@ public class FileUploadController {
     public ResponseEntity<Void> markManuscriptsReady(@PathVariable Long fileObjectId) {
         fileObjectService.markFailed(fileObjectId);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 리사이징 완료 여부 폴링 (k6 / 프론트 SSE 대체용)
+     * ready=true  → 파생 6종 모두 READY, 작품 등록 진행 가능
+     * ready=false → 아직 처리 중, 잠시 후 재요청
+     */
+    @PreAuthorize("hasRole('ROLE_CREATOR')")
+    @GetMapping("/resize-status")
+    public ResponseEntity<Map<String, Boolean>> getResizeStatus(@RequestParam String baseKey) {
+        boolean ready = fileObjectService.isResizeReady(baseKey);
+        return ResponseEntity.ok(Map.of("ready", ready));
     }
 
     /**
