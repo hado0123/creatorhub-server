@@ -3,7 +3,7 @@
 ## ✅ 요구사항
 
 ### 작품등록시 썸네일 이미지 업로드
-<img src="images/upload_creation.png" width="770" alt="작품 등록 썸네일 이미지 업로드" />
+<img src="../images/upload_creation.png" width="770" alt="작품 등록 썸네일 이미지 업로드" />
 
 - 작품 썸네일 이미지는 홈/목록/상세 등 노출과 모바일,웹 등의 환경을 고려 → 대표 이미지(포스터형, 가로형)와 기타이미지 6장으로 나눠짐
 - 작품 썸네일 이미지는 각각 별도의 이미지 업로드가 가능하며 업로드시 지정된 사이즈로 자동 리사이징
@@ -48,7 +48,7 @@
 ---
 
 ## ☁️ 최종 Architecture & Flow
-<img src="images/architecture.png" width="800" alt="이미지 업로드 아키텍쳐" />
+<img src="../images/architecture.png" width="800" alt="이미지 업로드 아키텍쳐" />
 
 1. Client → SpringBoot: presigned URL 발급 요청
 2. SpringBoot → S3: presigned URL 생성(서명)
