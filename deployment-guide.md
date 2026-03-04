@@ -135,6 +135,10 @@ sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d mysql
 sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d app
 ```
 
+참고) 모니터링 올리기 - 테스트할 때만 사용
+```bash
+sudo docker compose -f docker-compose.monitoring.yml up -d
+```
 
 ### 7. 정상 실행 확인
 

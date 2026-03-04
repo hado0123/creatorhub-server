@@ -82,6 +82,9 @@ public class SecurityConfig {
                 .requestMatchers(path.matcher(HttpMethod.GET, "/api/episodes/creation/{creationId}")).permitAll()
                 .requestMatchers(path.matcher(HttpMethod.GET, "/api/episodes/{creationId}/detail/{episodeId}")).permitAll()
 
+                .requestMatchers("/actuator/health", "/actuator/prometheus").permitAll()
+                .requestMatchers("/actuator/**").denyAll()
+
                 .requestMatchers("/api/files/resize-complete", "/error").permitAll()
                 .anyRequest().authenticated()
         );

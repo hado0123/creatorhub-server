@@ -134,6 +134,26 @@ public class FileObjectService {
 
 
     /**
+     * 리사이징 완료 여부 폴링
+     * ready=true  : 파생 6종 모두 READY
+     * ready=false : 아직 처리 중
+     */
+    @Transactional(readOnly = true)
+    public boolean isResizeReady(String baseKey) {
+        List<String> expectedKeys = ThumbnailKeys.DERIVED_SUFFIXES.stream()
+                .map(suffix -> baseKey + suffix)
+                .toList();
+
+        List<FileObject> derived = fileObjectRepository.findByStorageKeyIn(expectedKeys);
+
+        if (derived.size() < ThumbnailKeys.DERIVED_SUFFIXES.size()) {
+            return false; // 아직 INSERT 자체가 안 된 것이 있음
+        }
+
+        return derived.stream().allMatch(fo -> fo.getStatus() == FileObjectStatus.READY);
+    }
+
+    /**
      * 람다에서 백엔드 콜백시 리사이징 이미지 file_object 테이블에 insert or update
      */
     @Transactional
