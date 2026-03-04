@@ -17,6 +17,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public class SseController {
     private final SseEmitters sseEmitters;
 
+    /**
+     * SSE 최초 구독
+     */
     @PreAuthorize("hasRole('ROLE_CREATOR')")
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe(@RequestParam String baseKey) {

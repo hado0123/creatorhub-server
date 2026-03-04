@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/nodejs:20
+FROM public.ecr.aws/lambda/nodejs:24
 
 # sharp + AWS SDK 설치
 RUN npm install --omit=dev sharp @aws-sdk/client-s3

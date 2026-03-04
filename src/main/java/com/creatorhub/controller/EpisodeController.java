@@ -1,5 +1,7 @@
 package com.creatorhub.controller;
 
+import com.creatorhub.dto.episode.EpisodeDetailResponse;
+import com.creatorhub.dto.episode.EpisodeListResponse;
 import com.creatorhub.dto.episode.EpisodeRequest;
 import com.creatorhub.dto.episode.EpisodeResponse;
 import com.creatorhub.security.auth.CustomUserPrincipal;
@@ -9,10 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/episodes")
@@ -32,5 +33,27 @@ public class EpisodeController {
     ) {
         EpisodeResponse res = episodeService.publishEpisode(req, principal.id());
         return ResponseEntity.ok(res);
+    }
+
+    /**
+     * 특정 작품의 모든 회차 목록 조회
+     */
+    @GetMapping("/creation/{creationId}")
+    public ResponseEntity<List<EpisodeListResponse>> getEpisodesByCreation(
+            @PathVariable Long creationId
+    ) {
+        List<EpisodeListResponse> res = episodeService.getEpisodesByCreation(creationId);
+        return ResponseEntity.ok(res);
+    }
+
+    /**
+     * 특정 작품의 회차 원고 조회
+     */
+    @GetMapping("/{creationId}/detail/{episodeId}")
+    public EpisodeDetailResponse getEpisodeDetail(
+            @PathVariable Long creationId,
+            @PathVariable Long episodeId
+    ) {
+        return episodeService.getEpisodeDetail(creationId, episodeId);
     }
 }

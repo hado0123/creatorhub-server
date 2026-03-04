@@ -3,6 +3,7 @@ package com.creatorhub.service;
 import com.creatorhub.entity.Episode;
 import com.creatorhub.entity.EpisodeRating;
 import com.creatorhub.entity.Member;
+import com.creatorhub.dto.episode.rating.EpisodeRatingStatusResponse;
 import com.creatorhub.exception.episode.rating.AlreadyEpisodeRatingException;
 import com.creatorhub.exception.episode.EpisodeNotFoundException;
 import com.creatorhub.exception.member.MemberNotFoundException;
@@ -22,10 +23,10 @@ public class EpisodeRatingService {
     private final MemberRepository memberRepository;
 
     /**
-     * 별점 등록
+     * (회차별) 별점 등록 - 등록 후 갱신된 평균/개수 반환
      */
     @Transactional
-    public void rate(Long memberId, Long episodeId, int score) {
+    public EpisodeRatingStatusResponse rate(Long memberId, Long episodeId, int score) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(MemberNotFoundException::new);
 
@@ -42,5 +43,22 @@ public class EpisodeRatingService {
 
         // 집계 갱신
         episodeRepository.addRating(episodeId, score);
+
+        // 갱신된 평균/개수 조회해서 반환
+        // 레이스 컨디션 우려: 클라이언트에 보여주는건 내 점수가 아니라 현재 평균이므로 최신 평균을 보여주는게 오히려 더 정확
+        var meta = episodeRepository.findEpisodeMeta(episode.getCreation().getId(), episodeId)
+                .orElseThrow(EpisodeNotFoundException::new);
+
+        return EpisodeRatingStatusResponse.of(episodeId, true, score,
+                meta.getRatingAverage(), meta.getRatingCount());
+    }
+
+    /**
+     * (회차별) 내 평점 조회
+     */
+    public EpisodeRatingStatusResponse getRatingStatus(Long memberId, Long episodeId) {
+        return episodeRatingRepository.findByMemberIdAndEpisodeId(memberId, episodeId)
+                .map(r -> EpisodeRatingStatusResponse.of(episodeId, true, r.getScore()))
+                .orElse(EpisodeRatingStatusResponse.of(episodeId, false, null));
     }
 }

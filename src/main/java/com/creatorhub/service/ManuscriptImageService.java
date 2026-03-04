@@ -19,6 +19,9 @@ import java.util.Set;
 public class ManuscriptImageService {
     private final ManuscriptImageRepository manuscriptImageRepository;
 
+    /**
+     * 원고 이미지 순서 중복 체크
+     */
     public void validateDisplayOrders(List<ManuscriptRegisterItem> manuscripts) {
         Set<Integer> seen = new HashSet<>();
         for (ManuscriptRegisterItem m : manuscripts) {
@@ -28,6 +31,9 @@ public class ManuscriptImageService {
         }
     }
 
+    /**
+     * 원고 이미지 저장
+     */
     public List<ManuscriptImage> createAndSave(
             List<ManuscriptRegisterItem> manuscripts,
             Episode episode,

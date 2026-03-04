@@ -53,7 +53,7 @@ public class Episode extends BaseSoftDeleteEntity {
     private Integer likeCount;
 
     @Column
-    private Integer favoriteCount;
+    private Integer viewCount;
 
     @Column
     private Integer ratingSum;
@@ -84,7 +84,7 @@ public class Episode extends BaseSoftDeleteEntity {
         this.isCommentEnabled = isCommentEnabled;
         this.isPublic = isPublic;
         this.likeCount = 0;
-        this.favoriteCount = 0;
+        this.viewCount = 0;
         this.ratingSum = 0;
         this.ratingCount = 0;
         this.ratingAverage = BigDecimal.ZERO;

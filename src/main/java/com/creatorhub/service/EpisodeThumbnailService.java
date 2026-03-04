@@ -17,6 +17,9 @@ import java.util.Map;
 public class EpisodeThumbnailService {
     private final EpisodeThumbnailRepository episodeThumbnailRepository;
 
+    /**
+     * 에피소드 섬네일 저장
+     */
     public List<EpisodeThumbnail> createAndSave(
             EpisodeRequest req,
             Episode episode,

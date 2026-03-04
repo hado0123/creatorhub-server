@@ -1,5 +1,5 @@
 server:
-  port: 80
+  port: 8000
 
 logging:
   level:
@@ -15,7 +15,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        show_sql: true
+        show_sql: false
     hibernate:
       ddl-auto: validate
   flyway:
@@ -25,10 +25,14 @@ spring:
     validate-on-migrate: true
 
 jwt:
-  access-token-exp-min: 600
-  refresh-token-exp-days: 7
+  access-token-exp-min: 1
+  refresh-token-exp-days: 1
 
 file:
   max:
     thumbnail-size: 1MB
     manuscript-size: 5MB
+
+app:
+  cookie:
+    secure: false  # 로컬 개발환경(HTTP)에서는 false

@@ -67,6 +67,14 @@ public class CreationFavoriteService {
     }
 
     /**
+     * 관심 여부 조회
+     */
+    public CreationFavoriteResponse getFavoriteStatus(Long memberId, Long creationId) {
+        boolean favorited = creationFavoriteRepository.existsByMemberIdAndCreationId(memberId, creationId);
+        return CreationFavoriteResponse.of(creationId, favorited);
+    }
+
+    /**
      * 내 관심작품 목록 (최신 관심순)
      */
     public Page<FavoriteCreationItem> getMyFavorites(Long memberId, Pageable pageable) {

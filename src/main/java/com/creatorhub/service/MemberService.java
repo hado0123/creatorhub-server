@@ -53,9 +53,9 @@ public class MemberService {
      */
     private void validateDuplicateMember(MemberRequest memberRequest) {
         memberRepository.findByEmail(memberRequest.email())
-            .ifPresent(member -> {
-                throw new DuplicateEmailException();
-            });
+                .ifPresent(member -> {
+                    throw new DuplicateEmailException();
+                });
     }
 
     /**
@@ -82,6 +82,15 @@ public class MemberService {
 
         log.debug("회원 인증 완료 - email: {}, memberId: {}", maskEmail(member.getEmail()), member.getId());
 
+        return TokenPayload.from(member);
+    }
+
+    /**
+     * ID로 TokenPayload 조회 (/me 엔드포인트용)
+     */
+    public TokenPayload getTokenPayload(Long id) {
+        Member member = memberRepository.findById(id)
+                .orElseThrow(MemberNotFoundException::new);
         return TokenPayload.from(member);
     }
 }

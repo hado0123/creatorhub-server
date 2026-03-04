@@ -41,6 +41,8 @@ cloud:
   aws:
     s3:
       bucket: ${AWS_S3_BUCKET}
+  front:
+    base: ${CLOUDFRONT_BASE}
 
 callback:
   secret: ${CALLBACK_RESIZE_SECRET}
@@ -50,3 +52,10 @@ file:
   max:
     thumbnail-size: 1MB
     manuscript-size: 5MB
+
+cors:
+  client:
+    url: ${CORS_CLIENT_URL}
+app:
+  cookie:
+    secure: true

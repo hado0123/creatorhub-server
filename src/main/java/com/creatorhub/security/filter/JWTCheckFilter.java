@@ -32,17 +32,6 @@ public class JWTCheckFilter extends OncePerRequestFilter {
     private final AuthenticationEntryPoint authenticationEntryPoint;
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getServletPath();
-
-        // 토큰 없이 접근 허용할 경로들
-        return path.equals("/api/auth/login")          // 로그인
-                || path.equals("/api/auth/refresh")    // 토큰 재발급
-                || path.equals("/api/members/signup") // 회원가입
-                || path.equals("/api/files/resize-complete"); // 이미지 리사이즈 완료 콜백
-    }
-
-    @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
@@ -53,6 +42,16 @@ public class JWTCheckFilter extends OncePerRequestFilter {
         log.debug("JWTCheckFilter doFilter............ ");
 
         String headerStr = request.getHeader("Authorization");
+
+        // SSE 연결은 브라우저 EventSource가 커스텀 헤더를 지원하지 않으므로
+        // /api/sse/subscribe 경로에 한해 쿼리 파라미터 token을 Authorization 헤더 대용으로 허용
+        if ((headerStr == null || headerStr.isBlank())
+                && request.getServletPath().startsWith("/api/sse/")) {
+            String tokenParam = request.getParameter("token");
+            if (tokenParam != null && !tokenParam.isBlank()) {
+                headerStr = "Bearer " + tokenParam;
+            }
+        }
 
         // 1) Authorization 헤더가 아예 없으면 → JWT 검사는 건너뛰고 다음으로 넘김
         //    (이 경우, 나중에 인가 단계에서 401 / 혹은 404 처리가 이뤄짐)
@@ -114,6 +113,7 @@ public class JWTCheckFilter extends OncePerRequestFilter {
                     new JwtAuthenticationException(ErrorCode.INVALID_TOKEN, e);
 
             authenticationEntryPoint.commence(request, response, authEx);
+
         }
     }
 }
