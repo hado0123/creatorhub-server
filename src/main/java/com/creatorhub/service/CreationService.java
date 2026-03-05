@@ -316,6 +316,9 @@ public class CreationService {
         boolean hasNext = rows.size() == size;
 
         // 7. 최종 반환
-        return new CursorSliceResponse<>(items, hasNext, nextCursor);
+        CursorSliceResponse<CreationListItem> response = new CursorSliceResponse<>(items, hasNext, nextCursor);
+
+        log.debug("getCreationsByDay response: itemCount={}, hasNext={}, nextCursor={}", response.items().size(), response.hasNext(), response.nextCursor());
+        return response;
     }
 }
