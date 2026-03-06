@@ -80,24 +80,61 @@ public interface CreationRepository extends JpaRepository<Creation, Long> {
             @Param("posterType") CreationThumbnailType posterType
     );
 
+    // 조회수 집계: episode view_count 합산으로 갱신
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        UPDATE Creation c
+           SET c.totalViewCount = (
+               SELECT COALESCE(SUM(e.viewCount), 0)
+               FROM Episode e
+               WHERE e.creation = c
+           )
+         WHERE c.id = :creationId
+    """)
+    void updateTotalViewCount(@Param("creationId") Long creationId);
+
+    // 좋아요 집계: delta 증감
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        UPDATE Creation c
+           SET c.totalLikeCount =
+               CASE
+                   WHEN :delta < 0 AND COALESCE(c.totalLikeCount, 0) <= 0
+                       THEN 0
+                   ELSE COALESCE(c.totalLikeCount, 0) + :delta
+               END
+         WHERE c.id = :creationId
+    """)
+    void updateTotalLikeCount(@Param("creationId") Long creationId, @Param("delta") int delta);
+
+    // 별점 집계: score 추가, count +1, average 재계산
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        UPDATE Creation c
+           SET c.totalRatingSum = COALESCE(c.totalRatingSum, 0) + :score,
+               c.totalRatingCount = COALESCE(c.totalRatingCount, 0) + 1,
+               c.totalRatingAverage = CAST(COALESCE(c.totalRatingSum, 0) + :score AS bigdecimal)
+                                      / (COALESCE(c.totalRatingCount, 0) + 1)
+         WHERE c.id = :creationId
+    """)
+    void addTotalRating(@Param("creationId") Long creationId, @Param("score") int score);
+
     // 조회순
     @Query("""
         SELECT
             c.id AS id,
-            COALESCE(SUM(e.viewCount), 0) AS longValue,
+            COALESCE(c.totalViewCount, 0) AS longValue,
             NULL AS doubleValue,
             NULL AS tie
         FROM Creation c
-        JOIN Episode e ON e.creation = c AND e.isPublic = true
         WHERE c.isPublic = true
           AND :day MEMBER OF c.publishDays
-        GROUP BY c.id
-        HAVING (
-            :cursorValue IS NULL
-            OR COALESCE(SUM(e.viewCount), 0) < :cursorValue
-            OR (COALESCE(SUM(e.viewCount), 0) = :cursorValue AND c.id < :cursorId)
-        )
-        ORDER BY COALESCE(SUM(e.viewCount), 0) DESC, c.id DESC
+          AND (
+              :cursorValue IS NULL
+              OR COALESCE(c.totalViewCount, 0) < :cursorValue
+              OR (COALESCE(c.totalViewCount, 0) = :cursorValue AND c.id < :cursorId)
+          )
+        ORDER BY COALESCE(c.totalViewCount, 0) DESC, c.id DESC
     """)
     List<CreationSeekRow> findByDayOrderByViewsSeek(
             @Param("day") PublishDay day,
@@ -110,20 +147,18 @@ public interface CreationRepository extends JpaRepository<Creation, Long> {
     @Query("""
         SELECT
             c.id AS id,
-            COALESCE(SUM(e.likeCount), 0) AS longValue,
+            COALESCE(c.totalLikeCount, 0) AS longValue,
             NULL AS doubleValue,
             NULL AS tie
         FROM Creation c
-        JOIN Episode e ON e.creation = c AND e.isPublic = true
         WHERE c.isPublic = true
           AND :day MEMBER OF c.publishDays
-        GROUP BY c.id
-        HAVING (
-            :cursorValue IS NULL
-            OR COALESCE(SUM(e.likeCount), 0) < :cursorValue
-            OR (COALESCE(SUM(e.likeCount), 0) = :cursorValue AND c.id < :cursorId)
-        )
-        ORDER BY COALESCE(SUM(e.likeCount), 0) DESC, c.id DESC
+          AND (
+              :cursorValue IS NULL
+              OR COALESCE(c.totalLikeCount, 0) < :cursorValue
+              OR (COALESCE(c.totalLikeCount, 0) = :cursorValue AND c.id < :cursorId)
+          )
+        ORDER BY COALESCE(c.totalLikeCount, 0) DESC, c.id DESC
     """)
     List<CreationSeekRow> findByDayOrderByLikesSeek(
             @Param("day") PublishDay day,
@@ -133,63 +168,33 @@ public interface CreationRepository extends JpaRepository<Creation, Long> {
     );
 
     // 별점순
-    // 가중평균 = SUM(ratingSum) / SUM(ratingCount)
+    // totalRatingAverage 사전 계산된 컬럼 사용
     // ratingCount 합이 0인 경우 0 처리
     @Query("""
         SELECT
             c.id AS id,
             NULL AS longValue,
-            (CASE
-                WHEN COALESCE(SUM(e.ratingCount), 0) = 0
-                    THEN 0.0
-                ELSE (1.0 * COALESCE(SUM(e.ratingSum), 0))
-                     / COALESCE(SUM(e.ratingCount), 0)
-             END) AS doubleValue,
-            COALESCE(SUM(e.ratingCount), 0) AS tie
+            COALESCE(CAST(c.totalRatingAverage AS double), 0.0) AS doubleValue,
+            COALESCE(CAST(c.totalRatingCount AS long), 0L) AS tie
         FROM Creation c
-        JOIN Episode e ON e.creation = c AND e.isPublic = true
         WHERE c.isPublic = true
           AND :day MEMBER OF c.publishDays
-        GROUP BY c.id
-        HAVING (
-            :cursorAvg IS NULL
-            OR (
-                (CASE
-                    WHEN COALESCE(SUM(e.ratingCount), 0) = 0
-                        THEN 0.0
-                    ELSE (1.0 * COALESCE(SUM(e.ratingSum), 0))
-                         / COALESCE(SUM(e.ratingCount), 0)
-                 END) < :cursorAvg
-            )
-            OR (
-                (CASE
-                    WHEN COALESCE(SUM(e.ratingCount), 0) = 0
-                        THEN 0.0
-                    ELSE (1.0 * COALESCE(SUM(e.ratingSum), 0))
-                         / COALESCE(SUM(e.ratingCount), 0)
-                 END) = :cursorAvg
-                AND COALESCE(SUM(e.ratingCount), 0) < :cursorRatingCount
-            )
-            OR (
-                (CASE
-                    WHEN COALESCE(SUM(e.ratingCount), 0) = 0
-                        THEN 0.0
-                    ELSE (1.0 * COALESCE(SUM(e.ratingSum), 0))
-                         / COALESCE(SUM(e.ratingCount), 0)
-                 END) = :cursorAvg
-                AND COALESCE(SUM(e.ratingCount), 0) = :cursorRatingCount
-                AND c.id < :cursorId
-            )
-        )
-        ORDER BY
-            (CASE
-                WHEN COALESCE(SUM(e.ratingCount), 0) = 0
-                    THEN 0.0
-                ELSE (1.0 * COALESCE(SUM(e.ratingSum), 0))
-                     / COALESCE(SUM(e.ratingCount), 0)
-             END) DESC,
-            COALESCE(SUM(e.ratingCount), 0) DESC,
-            c.id DESC
+          AND (
+              :cursorAvg IS NULL
+              OR COALESCE(CAST(c.totalRatingAverage AS double), 0.0) < :cursorAvg
+              OR (
+                  COALESCE(CAST(c.totalRatingAverage AS double), 0.0) = :cursorAvg
+                  AND COALESCE(CAST(c.totalRatingCount AS long), 0L) < :cursorRatingCount
+              )
+              OR (
+                  COALESCE(CAST(c.totalRatingAverage AS double), 0.0) = :cursorAvg
+                  AND COALESCE(CAST(c.totalRatingCount AS long), 0L) = :cursorRatingCount
+                  AND c.id < :cursorId
+              )
+          )
+        ORDER BY COALESCE(CAST(c.totalRatingAverage AS double), 0.0) DESC,
+                 COALESCE(CAST(c.totalRatingCount AS long), 0L) DESC,
+                 c.id DESC
     """)
     List<CreationSeekRow> findByDayOrderByRatingSeek(
             @Param("day") PublishDay day,

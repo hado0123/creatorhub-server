@@ -148,6 +148,7 @@ public class EpisodeService {
                 .toList();
 
         episodeRepository.incrementViewCount(episodeId);
+        creationRepository.updateTotalViewCount(creationId);
 
         return EpisodeDetailResponse.from(meta, cloudfrontBase, storageKeys);
     }

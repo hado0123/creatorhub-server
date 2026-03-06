@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Profile("local")
 @Component
 @ConditionalOnProperty(
-        name = "seed.enabled",
+        name = "seed.enabled.member",
         havingValue = "true")
 @RequiredArgsConstructor
 @Order(0)

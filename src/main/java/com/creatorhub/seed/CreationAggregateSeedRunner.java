@@ -10,16 +10,16 @@ import org.springframework.stereotype.Component;
 @Profile("local")
 @Component
 @ConditionalOnProperty(
-        name = "seed.enabled.episode",
+        name = "seed.enabled.creation-aggregate",
         havingValue = "true" )
 @RequiredArgsConstructor
-@Order(2)
-public class EpisodeSeedRunner implements CommandLineRunner {
+@Order(3)
+public class CreationAggregateSeedRunner implements CommandLineRunner {
 
-    private final EpisodeSeeder episodeSeeder;
+    private final CreationAggregateSeeder creationAggregateSeeder;
 
     @Override
     public void run(String... args) {
-        episodeSeeder.seedEpisodes();
+        creationAggregateSeeder.updateAggregates();
     }
 }

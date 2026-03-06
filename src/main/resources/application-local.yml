@@ -53,4 +53,9 @@ management:
         http.server.requests: 0.5, 0.9, 0.95, 0.99
 
 seed:
-  enabled: false
+  enabled:
+    member: false
+    creation: false
+    episode: false
+    creation-aggregate: false
+
