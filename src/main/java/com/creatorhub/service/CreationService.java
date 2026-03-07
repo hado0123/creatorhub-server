@@ -17,13 +17,10 @@ import com.creatorhub.repository.projection.HashtagTitleProjection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,7 +31,6 @@ public class CreationService {
     private final FileObjectRepository fileObjectRepository;
     private final CreatorRepository creatorRepository;
     private final HashtagRepository hashtagRepository;
-    private final CreationThumbnailRepository creationThumbnailRepository;
     private final CreationHashtagRepository creationHashtagRepository;
 
     @Value("${cloud.front.base}")
@@ -217,44 +213,26 @@ public class CreationService {
             SeekCursor cursor,
             int size
     ) {
-        // 항상 0페이지 + size 만큼만 가져오는 이유:
-        // OFFSET 방식이 아니라 SEEK(커서) 방식이므로
-        // 앞에서 몇 개 건너뛰기가 아니라 조건으로 다음 구간을 가져온다
-        Pageable pageable = PageRequest.of(0, size);
-
+        final String dayName = day.name();
         final Long cursorValue =
                 cursor == null ? null : cursor.value().longValue();
         final Long cursorId =
                 cursor == null ? null : cursor.id();
 
-        // 1. 정렬 기준에 따라 "집계 + 커서 조건" 쿼리 실행
+        // 1. 네이티브 seek 쿼리 1회로 id + 정렬값 + title + poster 모두 조회
         List<CreationSeekRow> rows = switch (sort) {
-            // 조회순
             case VIEWS -> creationRepository.findByDayOrderByViewsSeek(
-                    day,
-                    // 커서가 없으면 첫 페이지 → null
-                    // 있으면 이전 페이지의 마지막 조회수 합계
-                    cursorValue,
-
-                    // 동점(조회수 동일)일 때 기준이 되는 id
-                    cursorId,
-                    pageable
+                    dayName, cursorValue, cursorId, size
             );
-            // 인기순
             case POPULAR -> creationRepository.findByDayOrderByLikesSeek(
-                    day,
-                    cursorValue,
-                    cursorId,
-                    pageable
+                    dayName, cursorValue, cursorId, size
             );
-            // 별점순:
-            // ratingAverage DESC → ratingCount DESC → id DESC
             case RATING -> creationRepository.findByDayOrderByRatingSeek(
-                    day,
+                    dayName,
                     cursor == null ? null : cursor.value(),
                     cursor == null ? 0L : (cursor.tie() == null ? 0L : cursor.tie()),
                     cursorId,
-                    pageable
+                    size
             );
         };
 
@@ -263,40 +241,18 @@ public class CreationService {
             return new CursorSliceResponse<>(List.of(), false, null);
         }
 
-        // 집계 쿼리는 id + 정렬값만 가져왔기 때문에 실제 화면에 보여줄 title, poster 등을 위해 id 목록 추출
-        List<Long> ids = rows.stream().map(CreationSeekRow::getId).toList();
+        // 3. 쿼리 결과 순서 그대로 DTO 변환
+        List<CreationListItem> items = rows.stream()
+                .map(row -> new CreationListItem(
+                        row.getId(),
+                        row.getTitle(),
+                        row.getStorageKey() != null
+                                ? cloudfrontBase + "/" + row.getStorageKey()
+                                : null
+                ))
+                .toList();
 
-        // 3. Creation 기본 정보 조회 (title 등)
-        List<Creation> creations = creationRepository.findByIdIn(ids);
-        Map<Long, Creation> creationById = creations.stream()
-                .collect(Collectors.toMap(Creation::getId, Function.identity()));
-
-        // 4. 대표 포스터 조회
-        List<CreationThumbnail> posters = creationThumbnailRepository
-                .findPostersByCreationIds(ids, CreationThumbnailType.POSTER);
-
-        Map<Long, String> posterUrlByCreationId = posters.stream()
-                .collect(Collectors.toMap(
-                        ct -> ct.getCreation().getId(),
-                        ct -> cloudfrontBase + "/" + ct.getFileObject().getStorageKey(),
-                        (a, b) -> a
-                ));
-
-        // 5. ids 순서대로 DTO 생성(집계 쿼리의 정렬 순서를 그대로 유지하기 위함)
-        List<CreationListItem> items = new ArrayList<>(ids.size());
-        for (Long id : ids) {
-            Creation c = creationById.get(id);
-            if (c == null) continue;
-
-            items.add(new CreationListItem(
-                    c.getId(),
-                    c.getTitle(),
-                    posterUrlByCreationId.get(c.getId())
-            ));
-        }
-
-        // 6. 다음 페이지용 커서 생성
-        // 마지막 행이 현재 페이지의 끝
+        // 4. 다음 페이지용 커서 생성
         CreationSeekRow last = rows.getLast();
 
         SeekCursor nextCursor = switch (sort) {
