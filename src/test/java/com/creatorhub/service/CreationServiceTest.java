@@ -29,7 +29,6 @@ class CreationServiceTest {
     @Mock FileObjectRepository fileObjectRepository;
     @Mock CreatorRepository creatorRepository;
     @Mock HashtagRepository hashtagRepository;
-    @Mock CreationThumbnailRepository creationThumbnailRepository;
     @Mock CreationHashtagRepository creationHashtagRepository;
 
     @InjectMocks CreationService creationService;
@@ -432,41 +431,17 @@ class CreationServiceTest {
 
         CreationSeekRow row1 = mock(CreationSeekRow.class);
         given(row1.getId()).willReturn(10L);
+        given(row1.getTitle()).willReturn("작품A");
+        given(row1.getStorageKey()).willReturn("upload/poster-a.jpg");
 
         CreationSeekRow row2 = mock(CreationSeekRow.class);
         given(row2.getId()).willReturn(20L);
         given(row2.getLongValue()).willReturn(300L);
+        given(row2.getTitle()).willReturn("작품B");
+        given(row2.getStorageKey()).willReturn("upload/poster-b.jpg");
 
-        Creation creation10 = mock(Creation.class);
-        given(creation10.getId()).willReturn(10L);
-        given(creation10.getTitle()).willReturn("작품A");
-
-        Creation creation20 = mock(Creation.class);
-        given(creation20.getId()).willReturn(20L);
-        given(creation20.getTitle()).willReturn("작품B");
-
-        Creation posterCreation10 = mock(Creation.class);
-        given(posterCreation10.getId()).willReturn(10L);
-        FileObject fo10 = mock(FileObject.class);
-        given(fo10.getStorageKey()).willReturn("upload/poster-a.jpg");
-        CreationThumbnail posterA = mock(CreationThumbnail.class);
-        given(posterA.getCreation()).willReturn(posterCreation10);
-        given(posterA.getFileObject()).willReturn(fo10);
-
-        Creation posterCreation20 = mock(Creation.class);
-        given(posterCreation20.getId()).willReturn(20L);
-        FileObject fo20 = mock(FileObject.class);
-        given(fo20.getStorageKey()).willReturn("upload/poster-b.jpg");
-        CreationThumbnail posterB = mock(CreationThumbnail.class);
-        given(posterB.getCreation()).willReturn(posterCreation20);
-        given(posterB.getFileObject()).willReturn(fo20);
-
-        given(creationRepository.findByDayOrderByViewsSeek(eq(day), isNull(), isNull(), any()))
+        given(creationRepository.findByDayOrderByViewsSeek("MON", null, null, size))
                 .willReturn(List.of(row1, row2));
-        given(creationRepository.findByIdIn(List.of(10L, 20L)))
-                .willReturn(List.of(creation10, creation20));
-        given(creationThumbnailRepository.findPostersByCreationIds(List.of(10L, 20L), CreationThumbnailType.POSTER))
-                .willReturn(List.of(posterA, posterB));
 
         CursorSliceResponse<CreationListItem> resp = creationService.getCreationsByDay(day, CreationSort.VIEWS, null, size);
 
@@ -495,25 +470,11 @@ class CreationServiceTest {
         CreationSeekRow row = mock(CreationSeekRow.class);
         given(row.getId()).willReturn(30L);
         given(row.getLongValue()).willReturn(100L);
+        given(row.getTitle()).willReturn("작품C");
+        given(row.getStorageKey()).willReturn("upload/poster-c.jpg");
 
-        Creation creation30 = mock(Creation.class);
-        given(creation30.getId()).willReturn(30L);
-        given(creation30.getTitle()).willReturn("작품C");
-
-        Creation posterCreation30 = mock(Creation.class);
-        given(posterCreation30.getId()).willReturn(30L);
-        FileObject fo30 = mock(FileObject.class);
-        given(fo30.getStorageKey()).willReturn("upload/poster-c.jpg");
-        CreationThumbnail poster30 = mock(CreationThumbnail.class);
-        given(poster30.getCreation()).willReturn(posterCreation30);
-        given(poster30.getFileObject()).willReturn(fo30);
-
-        given(creationRepository.findByDayOrderByLikesSeek(eq(day), eq(300L), eq(20L), any()))
+        given(creationRepository.findByDayOrderByLikesSeek("TUE", 300L, 20L, size))
                 .willReturn(List.of(row));
-        given(creationRepository.findByIdIn(List.of(30L)))
-                .willReturn(List.of(creation30));
-        given(creationThumbnailRepository.findPostersByCreationIds(List.of(30L), CreationThumbnailType.POSTER))
-                .willReturn(List.of(poster30));
 
         CursorSliceResponse<CreationListItem> resp = creationService.getCreationsByDay(day, CreationSort.POPULAR, cursor, size);
 
@@ -521,7 +482,7 @@ class CreationServiceTest {
         assertThat(resp.hasNext()).isFalse();
         assertThat(resp.items().get(0).id()).isEqualTo(30L);
 
-        then(creationRepository).should(times(1)).findByDayOrderByLikesSeek(eq(day), eq(300L), eq(20L), any());
+        then(creationRepository).should(times(1)).findByDayOrderByLikesSeek("TUE", 300L, 20L, size);
     }
 
     @Test
@@ -535,17 +496,11 @@ class CreationServiceTest {
         given(row.getId()).willReturn(20L);
         given(row.getDoubleValue()).willReturn(4.2);
         given(row.getTie()).willReturn(80L);
+        given(row.getTitle()).willReturn("별점 작품");
+        given(row.getStorageKey()).willReturn(null);
 
-        Creation creation20 = mock(Creation.class);
-        given(creation20.getId()).willReturn(20L);
-        given(creation20.getTitle()).willReturn("별점 작품");
-
-        given(creationRepository.findByDayOrderByRatingSeek(eq(day), eq(4.5), eq(100L), eq(10L), any()))
+        given(creationRepository.findByDayOrderByRatingSeek("WED", 4.5, 100L, 10L, size))
                 .willReturn(List.of(row));
-        given(creationRepository.findByIdIn(List.of(20L)))
-                .willReturn(List.of(creation20));
-        given(creationThumbnailRepository.findPostersByCreationIds(List.of(20L), CreationThumbnailType.POSTER))
-                .willReturn(List.of());
 
         CursorSliceResponse<CreationListItem> resp = creationService.getCreationsByDay(day, CreationSort.RATING, cursor, size);
 
@@ -556,39 +511,33 @@ class CreationServiceTest {
         assertThat(resp.nextCursor().tie()).isEqualTo(80L);
         assertThat(resp.items().get(0).posterUrl()).isNull();
 
-        then(creationRepository).should(times(1)).findByDayOrderByRatingSeek(eq(day), eq(4.5), eq(100L), eq(10L), any());
+        then(creationRepository).should(times(1)).findByDayOrderByRatingSeek("WED", 4.5, 100L, 10L, size);
     }
 
     @Test
     @DisplayName("getCreationsByDay 성공: 결과 없으면 빈 items + hasNext=false + nextCursor=null 반환")
     void getCreationsByDay_empty() {
-        PublishDay day = PublishDay.SUN;
-
-        given(creationRepository.findByDayOrderByViewsSeek(eq(day), isNull(), isNull(), any()))
+        given(creationRepository.findByDayOrderByViewsSeek("SUN", null, null, 10))
                 .willReturn(List.of());
 
-        CursorSliceResponse<CreationListItem> resp = creationService.getCreationsByDay(day, CreationSort.VIEWS, null, 10);
+        CursorSliceResponse<CreationListItem> resp = creationService.getCreationsByDay(PublishDay.SUN, CreationSort.VIEWS, null, 10);
 
         assertThat(resp.items()).isEmpty();
         assertThat(resp.hasNext()).isFalse();
         assertThat(resp.nextCursor()).isNull();
-
-        then(creationRepository).should(never()).findByIdIn(anyList());
-        then(creationThumbnailRepository).shouldHaveNoInteractions();
     }
 
     @Test
     @DisplayName("getCreationsByDay 성공(RATING): 커서 null이면 cursorAvg=null, cursorRatingCount=0 전달")
     void getCreationsByDay_rating_firstPage() {
-        PublishDay day = PublishDay.FRI;
         int size = 5;
 
-        given(creationRepository.findByDayOrderByRatingSeek(eq(day), isNull(), eq(0L), isNull(), any()))
+        given(creationRepository.findByDayOrderByRatingSeek("FRI", null, 0L, null, size))
                 .willReturn(List.of());
 
-        CursorSliceResponse<CreationListItem> resp = creationService.getCreationsByDay(day, CreationSort.RATING, null, size);
+        CursorSliceResponse<CreationListItem> resp = creationService.getCreationsByDay(PublishDay.FRI, CreationSort.RATING, null, size);
 
         assertThat(resp.items()).isEmpty();
-        then(creationRepository).should(times(1)).findByDayOrderByRatingSeek(eq(day), isNull(), eq(0L), isNull(), any());
+        then(creationRepository).should(times(1)).findByDayOrderByRatingSeek("FRI", null, 0L, null, size);
     }
 }
