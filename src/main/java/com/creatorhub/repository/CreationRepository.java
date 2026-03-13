@@ -46,13 +46,6 @@ public interface CreationRepository extends JpaRepository<Creation, Long> {
     void updateFavoriteCount(@Param("creationId") Long creationId, @Param("delta") int delta);
 
     @Query("""
-        select c
-        from Creation c
-        where c.id in :ids
-    """)
-    List<Creation> findByIdIn(@Param("ids") List<Long> ids);
-
-    @Query("""
         SELECT c.creator.member.id
         FROM Creation c
         WHERE c.id = :creationId
