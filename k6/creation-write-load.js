@@ -1,18 +1,20 @@
 import http from 'k6/http';
-import { check, sleep, fail } from 'k6';
+import { check, fail } from 'k6';
 import { Rate, Trend, Counter } from 'k6/metrics';
-import encoding from 'k6/encoding';
-import crypto from 'k6/crypto';
+import sse from 'k6/x/sse';
 
-/**
+
+// init 컨텍스트에서 실제 JPEG 파일을 바이너리로 로드 (VU 초기화 시 1회만 실행)
+const SAMPLE_JPEG = open('./sample-images/thumb.jpg', 'b');
+
+/**ㄴ
  * [작품 등록 부하 테스트]
  *  1. 로그인
  *  2. 썸네일 등록
  *     - 포스터형(POSTER):   presigned URL 요청 → S3 업로드 → READY 마킹
- *     - 가로형(HORIZONTAL): presigned URL 요청 → S3 업로드(응답이 오면 가로형은 READY로 변경)
- *                          → k6가 Lambda 콜백(/api/files/resize-complete) 직접 호출
- *                          → 서버가 파생 6종 READY 처리
- *                          → GET /api/files/resize-status 폴링으로 READY 확인
+ *     - 가로형(HORIZONTAL): presigned URL 요청 → S3 업로드 → 실제 Lambda가 리사이징
+ *                          → Lambda가 ngrok 경유(개발시)로 /api/files/resize-complete 콜백
+ *                          → SSE 구독(/api/sse/subscribe)으로 RESIZE_COMPLETE 이벤트 수신
  *  3. 작품 등록
  */
 
@@ -22,8 +24,10 @@ const loginDuration          = new Trend('login_duration', true);
 const presignedDuration      = new Trend('presigned_duration', true);
 const s3UploadDuration       = new Trend('s3_upload_duration', true);
 const markReadyDuration      = new Trend('mark_ready_duration', true);
-const lambdaCallbackDuration = new Trend('lambda_callback_duration', true);
-const ssePollDuration        = new Trend('sse_poll_duration', true);
+const sseConnectDuration     = new Trend('sse_connect_duration', true);     // 1. SSE 연결 확립
+const uploadReadyDuration    = new Trend('upload_ready_duration', true);    // 2. S3 업로드 + READY 마킹
+const lambdaCallbackDuration = new Trend('lambda_callback_duration', true); // 3. Lambda 처리 + 서버 콜백 수신 (서버가 callbackReceivedAt 제공 시)
+const ssePublishDuration     = new Trend('sse_publish_duration', true);     // 4. SSE 이벤트 발행 → 클라이언트 수신 (서버가 callbackReceivedAt 제공 시)
 const createDuration         = new Trend('creation_create_duration', true);
 const totalFlowDuration      = new Trend('total_flow_duration', true);
 const resizeTimeoutCount     = new Counter('resize_timeout_count');
@@ -32,18 +36,11 @@ const resizeTimeoutCount     = new Counter('resize_timeout_count');
 const BASE_URL = __ENV.BASE_URL || 'http://host.docker.internal:8000';
 
 // 테스트용 CREATOR 계정 (미리 DB에 seeding 필요)
-const TEST_EMAIL    = __ENV.TEST_EMAIL    || 'test2@test.com';
+const TEST_EMAIL    = __ENV.TEST_EMAIL    || 'test@test.com';
 const TEST_PASSWORD = __ENV.TEST_PASSWORD || 'test1234!';
 
-// Lambda 콜백 HMAC 시크릿 (application-local-secret.yml: callback.secret)
-const CALLBACK_SECRET = __ENV.CALLBACK_SECRET || 'creatorhub-resize-callback-7f3b9c4e2a8d6e1f9a0c5b4d8e2f7a6c';
-
-// S3 버킷명
-const S3_BUCKET = __ENV.S3_BUCKET || 'creatorhub-dev';
-
-// 리사이징 폴링 설정
-const RESIZE_TIMEOUT_MS        = 30000; // READY 대기 최대 시간 (ms)
-const RESIZE_POLL_INTERVAL_SEC = 0.5;   // 폴링 간격 (초)
+// SSE 리사이징 대기 설정 (xk6-sse timeout은 Go duration 문자열 형식)
+const RESIZE_TIMEOUT = '120s';
 
 // ── 부하 시나리오 ───────────────────────────────────────────────
 export const options = {
@@ -66,39 +63,21 @@ export const options = {
         creation_create_duration: ['p(95)<3000', 'p(99)<5000'],
         total_flow_duration:      ['p(95)<60000'],
         s3_upload_duration:       ['p(95)<5000'],
-        lambda_callback_duration: ['p(95)<1000'],
         error_rate:               ['rate<0.05'],
     },
 };
 
-// ── 더미 JPEG (1x1 흰색 픽셀) ─────────────────────────────────
-// k6는 Canvas/파일시스템 접근 불가 → 최소 유효 JPEG 바이너리를 base64로 하드코딩
-const TINY_JPEG_B64 =
-    '/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8U' +
-    'HRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgN' +
-    'DRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIy' +
-    'MjL/wAARCAABAAEDASIAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACf/EABQQAQAAAAAA' +
-    'AAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/' +
-    'aAAwDAQACEQMRAD8AJQAB/9k=';
-
-function makeDummyJpeg(thumbnailType) {
-    const bytes = encoding.b64decode(TINY_JPEG_B64, 'std', 'b');
+function makeSampleJpeg(thumbnailType) {
     return {
-        body:     bytes,
+        body:     SAMPLE_JPEG,
         filename: `test_${thumbnailType.toLowerCase()}_${Date.now()}.jpg`,
-        size:     bytes.byteLength,
+        size:     SAMPLE_JPEG.byteLength,
     };
 }
 
 // ── HTTP 래퍼 (res.timings.duration으로 측정 → 음수 없음) ──────
 function timedPost(trend, url, body, params) {
     const res = http.post(url, body, params);
-    trend.add(res.timings.duration);
-    return res;
-}
-
-function timedGet(trend, url, params) {
-    const res = http.get(url, params);
     trend.add(res.timings.duration);
     return res;
 }
@@ -204,7 +183,6 @@ function uploadToS3(uploadUrl, jpeg) {
 
 // ──────────────────────────────────────────────────────────────
 // POSTER READY 마킹  POST /api/files/{fileObjectId}/thumbnails/ready
-// (HORIZONTAL은 Lambda 콜백에서 READY 처리되므로 호출하지 않음)
 // ──────────────────────────────────────────────────────────────
 function markThumbnailReady(token, fileObjectId) {
     const res = timedPost(
@@ -220,96 +198,87 @@ function markThumbnailReady(token, fileObjectId) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// Lambda 콜백 흉내  POST /api/files/resize-complete
+// SSE 구독 + RESIZE_COMPLETE 대기
+//   GET /api/sse/subscribe?baseKey=...
 //
-// 실제 환경: S3 → SQS → Lambda → 리사이징 → 백엔드 콜백
-// k6 환경:  실제 Lambda가 없으므로 k6가 직접 콜백을 호출해
-//           파생 FileObject 6개를 DB에 생성 (6개 파생 모두 READY 처리됨)
+// 실행 순서:
+//   1) SSE 구독 시작 (연결 확립)
+//   2) onConnected() 콜백 실행 → S3 업로드 + READY 마킹 (Lambda 트리거)
+//   3) Lambda 리사이징 → ngrok 경유로 서버에 콜백
+//   4) 서버가 SSE로 RESIZE_COMPLETE 이벤트 전송 → 수신 시 종료
 //
-// 인증 방식 (LambdaCallbackAuthFilter):
-//   X-Timestamp : 현재 시각 (ms, 문자열)
-//   X-Signature : HMAC-SHA256( secret, "{timestamp}.{rawBody}" ) hex
+// SSE 연결을 먼저 열어 Lambda보다 구독이 앞서도록 보장.
+//
+// xk6-sse를 사용하므로 k6 빌드 시 아래 명령으로 커스텀 바이너리 필요:
+//   xk6 build --with github.com/phymbert/xk6-sse
 // ──────────────────────────────────────────────────────────────
-function simulateLambdaCallback(baseKey) {
-    const timestamp = String(Date.now());
+function subscribeAndWaitForResize(token, baseKey, onConnected) {
+    const t0  = Date.now();
+    const url = `${BASE_URL}/api/sse/subscribe?baseKey=${encodeURIComponent(baseKey)}`;
 
-    const body = JSON.stringify({
-        bucket:      S3_BUCKET,
-        triggerKey:  baseKey + '_434x330.jpg',
-        baseKey:     baseKey,
-        derivedFiles: [
-            { key: baseKey + '_83x90.jpg',   width: 83,  height: 90,  sizeBytes: 1024 },
-            { key: baseKey + '_98x79.jpg',   width: 98,  height: 79,  sizeBytes: 1024 },
-            { key: baseKey + '_125x101.jpg', width: 125, height: 101, sizeBytes: 1024 },
-            { key: baseKey + '_202x164.jpg', width: 202, height: 164, sizeBytes: 1024 },
-            { key: baseKey + '_217x165.jpg', width: 217, height: 165, sizeBytes: 1024 },
-            { key: baseKey + '_218x120.jpg', width: 218, height: 120, sizeBytes: 1024 },
-        ],
-        resizedAt: new Date().toISOString(),
+    let resizeComplete = false;
+    let t2 = 0; // onConnected 완료 시점 (READY 마킹 직후)
+
+    const res = sse.open(url, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        timeout: RESIZE_TIMEOUT,
+        tags: { name: 'sse_resize_subscribe' },
+    }, function(client) {
+        const t1 = Date.now();
+        sseConnectDuration.add(t1 - t0); // 1. SSE 연결 확립
+
+        // CONNECTED 이벤트의 serverTime으로 서버-클라이언트 클럭 오프셋 계산
+        // adjustedServerTime = serverTime - clockOffset → 클라이언트 기준 시간으로 변환
+        let clockOffset = 0;
+
+        client.on('event', function(event) {
+            if (event.name === 'CONNECTED') {
+                try {
+                    const data = JSON.parse(event.data || '{}');
+                    if (data.serverTime) {
+                        clockOffset = data.serverTime - t1; // 서버 시간 - 클라이언트 시간
+                    }
+                } catch (_) {}
+            }
+
+            if (event.name === 'RESIZE_COMPLETE') {
+                const t4 = Date.now();
+                resizeComplete = true;
+
+                // 3+4단계 분리: callbackReceivedAt을 clockOffset으로 보정해 클라이언트 기준 시간으로 변환
+                try {
+                    const data = JSON.parse(event.data || '{}');
+                    if (data.callbackReceivedAt) {
+                        const adjustedCallbackTime = data.callbackReceivedAt - clockOffset;
+                        lambdaCallbackDuration.add(adjustedCallbackTime - t2); // 3. Lambda 처리 + 서버 콜백
+                        ssePublishDuration.add(t4 - adjustedCallbackTime);     // 4. SSE 발행 → 클라이언트 수신
+                    }
+                } catch (_) { /* event.data가 JSON이 아닌 경우 무시 */ }
+
+                client.close();
+            }
+        });
+
+        client.on('error', function(e) {
+            console.error(`[sse] 오류 baseKey=${baseKey}: ${e}`);
+            client.close();
+        });
+
+        // SSE 연결 확립 후 S3 업로드 + READY 마킹 실행 (Lambda 트리거)
+        if (onConnected) onConnected();
+        t2 = Date.now();
+        uploadReadyDuration.add(t2 - t1); // 2. S3 업로드 + READY 마킹
     });
 
-    const signature = crypto.hmac('sha256', CALLBACK_SECRET, timestamp + '.' + body, 'hex');
-
-    const res = timedPost(
-        lambdaCallbackDuration,
-        `${BASE_URL}/api/files/resize-complete`,
-        body,
-        {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Timestamp':  timestamp,
-                'X-Signature':  signature,
-            },
-        },
-    );
-
-    const ok = check(res, { '[lambda-callback] status 200': (r) => r.status === 200 });
+    const ok = check(res, { '[sse] status 200': (r) => r.status === 200 });
     errorRate.add(!ok);
-    if (!ok) fail(`Lambda 콜백 실패: status=${res.status}`);
-}
 
-// ──────────────────────────────────────────────────────────────
-// 리사이징 완료 폴링  GET /api/files/resize-status?baseKey=...
-//
-// SSE는 k6 단일 스레드 특성상 재현 불가(콜백 전에 구독 불가).
-// 대신 파생 6종 FileObject가 모두 READY인지 DB 기반으로 폴링.
-// 즉시 응답(200 JSON)이므로 timeout 없음 → http_req_failed 오염 없음.
-// ──────────────────────────────────────────────────────────────
-function waitForResize(token, baseKey) {
-    const deadline = Date.now() + RESIZE_TIMEOUT_MS;
-
-    let found   = false;
-    let attempt = 0;
-
-    while (Date.now() < deadline) {
-        attempt++;
-
-        const res = timedGet(
-            ssePollDuration,
-            `${BASE_URL}/api/files/resize-status?baseKey=${encodeURIComponent(baseKey)}`,
-            {
-                headers: { ...authHeaders(token), 'Accept': 'application/json' },
-                responseType: 'text',
-                tags: { name: 'resize_status_poll' },
-            },
-        );
-
-        if (res.status === 200) {
-            try {
-                if (JSON.parse(res.body).ready === true) {
-                    found = true;
-                    break;
-                }
-            } catch (_) { /* 파싱 실패 시 다음 폴링 */ }
-        }
-
-        sleep(RESIZE_POLL_INTERVAL_SEC);
-    }
-
-    if (!found) {
+    if (!resizeComplete) {
         resizeTimeoutCount.add(1);
-        console.warn(`[resize-status] 폴링 타임아웃 baseKey=${baseKey} attempts=${attempt}`);
+        console.warn(`[sse] RESIZE_COMPLETE 미수신 baseKey=${baseKey}`);
     }
+
+    return res;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -379,36 +348,28 @@ export default function () {
 
     // 1) 토큰 확보 (캐시 hit 시 로그인 생략)
     getToken();
-    sleep(0.3);
 
     // 2) POSTER: presigned URL → S3 업로드 → READY 마킹
-    const posterJpeg = makeDummyJpeg('POSTER');
+    const posterJpeg = makeSampleJpeg('POSTER');
     const posterPresigned = withAuth((token) => requestPresignedUrl(token, 'POSTER', posterJpeg));
-    sleep(0.1);
 
     uploadToS3(posterPresigned.uploadUrl, posterJpeg);
-    sleep(0.1);
 
     withAuth((token) => markThumbnailReady(token, posterPresigned.fileObjectId));
-    sleep(0.1);
 
-    // 3) HORIZONTAL: presigned URL → S3 업로드(응답이 오면 가로형은 READY로 변경) → Lambda 콜백 → resize-status 폴링
-    const horizontalJpeg = makeDummyJpeg('HORIZONTAL');
+    // 3) HORIZONTAL: presigned URL 요청(baseKey 획득)
+    //               → SSE 구독 시작
+    //               → S3 업로드(Lambda 트리거) → READY 마킹
+    //               → RESIZE_COMPLETE 이벤트 수신
+    const horizontalJpeg = makeSampleJpeg('HORIZONTAL');
     const horizontalPresigned = withAuth((token) => requestPresignedUrl(token, 'HORIZONTAL', horizontalJpeg));
     const baseKey = extractBaseKey(horizontalPresigned.storageKey);
-    sleep(0.1);
 
-    uploadToS3(horizontalPresigned.uploadUrl, horizontalJpeg);
-    sleep(0.1);
-
-    withAuth((token) => markThumbnailReady(token, horizontalPresigned.fileObjectId));
-    sleep(0.1);
-
-    simulateLambdaCallback(baseKey);
-    sleep(0.1);
-
-    withAuth((token) => { waitForResize(token, baseKey); return { status: 200 }; });
-    sleep(0.1);
+    // SSE 구독 시작 → 연결 확립 후 S3 업로드 + READY 마킹 → RESIZE_COMPLETE 수신 대기
+    withAuth((token) => subscribeAndWaitForResize(token, baseKey, () => {
+        uploadToS3(horizontalPresigned.uploadUrl, horizontalJpeg);
+        withAuth((t) => markThumbnailReady(t, horizontalPresigned.fileObjectId));
+    }));
 
     // 4) 작품 등록
     const creationId = withAuth((token) => createCreation(
@@ -420,5 +381,4 @@ export default function () {
     totalFlowDuration.add(Date.now() - flowStart);
     console.log(`[VU ${__VU}] ITER=${__ITER} 작품 등록 완료 creationId=${creationId} (토큰 캐시: ${tokenCache[__VU] ? 'HIT' : 'MISS'})`);
 
-    sleep(Math.random() * 2 + 1);
 }
