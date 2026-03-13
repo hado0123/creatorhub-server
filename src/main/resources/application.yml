@@ -11,9 +11,10 @@ spring:
     database-platform: org.hibernate.dialect.MySQLDialect
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-#    hikari:
-#      maximum-pool-size: 30
-#      minimum-idle: 10
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 3000
   web:
     resources:
       add-mappings: false # 정적 리소스 서빙 안함

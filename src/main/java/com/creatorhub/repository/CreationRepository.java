@@ -78,18 +78,14 @@ public interface CreationRepository extends JpaRepository<Creation, Long> {
             @Param("posterType") CreationThumbnailType posterType
     );
 
-    // 조회수 집계: episode view_count 합산으로 갱신
+    // 조회수 증가: +1 단순 증가 (SUM 집계 서브쿼리 제거)
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         UPDATE Creation c
-           SET c.totalViewCount = (
-               SELECT COALESCE(SUM(e.viewCount), 0)
-               FROM Episode e
-               WHERE e.creation = c
-           )
+           SET c.totalViewCount = COALESCE(c.totalViewCount, 0) + 1
          WHERE c.id = :creationId
     """)
-    void updateTotalViewCount(@Param("creationId") Long creationId);
+    void incrementTotalViewCount(@Param("creationId") Long creationId);
 
     // 좋아요 집계: delta 증감
     @Modifying(clearAutomatically = true, flushAutomatically = true)

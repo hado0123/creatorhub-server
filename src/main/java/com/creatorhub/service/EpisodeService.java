@@ -20,6 +20,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.cache.annotation.Cacheable;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,6 +34,7 @@ public class EpisodeService {
     private final ManuscriptImageRepository manuscriptImageRepository;
     private final ManuscriptImageService manuscriptImageService;
     private final EpisodeThumbnailService episodeThumbnailService;
+    private final ViewCountService viewCountService;
 
     @Value("${cloud.front.base}")
     private String cloudfrontBase;
@@ -129,7 +132,7 @@ public class EpisodeService {
     /**
      * 특정 작품의 회차 원고 조회 + 조회수 증가
      */
-    @Transactional
+    @Cacheable(value = "episodeDetail", key = "#creationId + ':' + #episodeId")
     public EpisodeDetailResponse getEpisodeDetail(
             Long creationId,
             Long episodeId
@@ -147,8 +150,7 @@ public class EpisodeService {
                 .map(ManuscriptRowProjection::getStorageKey)
                 .toList();
 
-        episodeRepository.incrementViewCount(episodeId);
-        creationRepository.updateTotalViewCount(creationId);
+        viewCountService.incrementAsync(episodeId, creationId);
 
         return EpisodeDetailResponse.from(meta, cloudfrontBase, storageKeys);
     }
