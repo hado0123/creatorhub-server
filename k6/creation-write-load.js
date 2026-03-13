@@ -7,7 +7,7 @@ import sse from 'k6/x/sse';
 // init 컨텍스트에서 실제 JPEG 파일을 바이너리로 로드 (VU 초기화 시 1회만 실행)
 const SAMPLE_JPEG = open('./sample-images/thumb.jpg', 'b');
 
-/**ㄴ
+/**
  * [작품 등록 부하 테스트]
  *  1. 로그인
  *  2. 썸네일 등록
