@@ -75,6 +75,7 @@ EC2 서버에 아래 파일을 준비한다.
 
 - `docker-compose.yml`
 - `docker-compose.prod.yml`
+- `docker-compose.monitoring.yml(필요시)`
 - `.env`
 
 방법:
@@ -87,15 +88,20 @@ EC2 서버에 아래 파일을 준비한다.
 운영 서버에서는 **build 옵션을 제거**한다.
 
 👉 이미 Docker Hub에 빌드된 이미지를 사용하기 때문  
-👉 `image`가 있어야 자동 pull이 동작한다(반드시 추가)
+👉 `image`가 있어야 자동 pull이 동작한다(반드시 추가) <br/>
+👉 백엔드,프론트엔드 각각 image명 지정
 
 ### 예시
 
 ```yaml
 services:
   app:
-    image: docker계정id/creatorhub-app:1.0 ✔️추가
+    image: docker계정id/creatorhub-app:1.0 ✔️추가(백엔드)
     container_name: creatorhub-app
+    ...
+  frontend:
+    image: docker계정id/creatorhub-frontend:1.0 ✔️추가(프론트엔드)
+    container_name: creatorhub-frontend
     ...
 ```
 
@@ -121,7 +127,7 @@ docker pull docker계정id/creatorhub-app:1.0
 ```
 
 
-### 5. 인프라 컨테이너 먼저 실행
+### 5. 인프라 컨테이너 먼저 실행(혹은 재실행)
 
 MySQL, Redis는 기동 시간이 필요하므로 먼저 실행한다.
 
@@ -132,10 +138,10 @@ sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d mysql
 ### 6. 애플리케이션 실행
 
 ```bash
-sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d app
+sudo docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d app frontend
 ```
 
-참고) 모니터링 올리기 - 테스트할 때만 사용
+참고) 모니터링 올리기(필요시)
 ```bash
 sudo docker compose -f docker-compose.monitoring.yml up -d
 ```
@@ -154,4 +160,5 @@ sudo docker ps
 sudo docker logs -f creatorhub-mysql
 sudo docker logs -f creatorhub-redis
 sudo docker logs -f creatorhub-app
+sudo docker logs -f creatorhub-frontend
 ```
