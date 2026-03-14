@@ -2,8 +2,8 @@
 #### **웹툰은 회차 보기가 가장 중요하므로 P95 Response Time을 300ms 이하로 목표**
 
 ### 요약
-대용량 데이터(작품 7,000 / 에피소드 518k) 환경에서 웹툰 회차 조회 API 성능 개선을 진행하여
-- Throughput: 151 req/s → 1,679 req/s (11배 증가)
+대용량 데이터(작품 7,000 / 에피소드 518k) 환경에서 웹툰 회차 조회 API 성능 개선을 진행하여 아래와 같이 개선함
+- Throughput(TPS): 151 req/s → 1,679 req/s (11배 증가)
 - P95 Latency: 1.97s → 268.45ms (86% 감소)
 - 주요 개선: 조회수 UPDATE 비동기 처리 + Caffeine 캐시 적용
 
@@ -16,8 +16,8 @@
 - Server: Spring Boot (Docker)
 - Database: MySQL 8
 - Dataset
-    - Creation: 7,000
-    - Episode: 518,146
+    - Creations: 7,000건
+    - Episodes: 518,146건
 
 ### 부하 테스트 Scenario 상세
 | Stage | Duration | VUs | Description |

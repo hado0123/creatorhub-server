@@ -1,9 +1,8 @@
 ## 요일별 웹툰 읽기 
 
 ### 요약
-대용량 데이터(작품 7,000 / 에피소드 518k) 환경에서
-요일별 웹툰 조회 API 성능 개선을 진행하여
-- Throughput: 93 req/s → 935 req/s (10배 증가)
+대용량 데이터(작품 7,000 / 에피소드 518k) 환경에서 요일별 웹툰 조회 API 성능 개선을 진행하여 아래와 같이 개선함
+- Throughput(TPS): 93 req/s → 935 req/s (10배 증가)
 - P95 Latency: 3.13s → 400ms (87% 감소)
 
 ---
@@ -15,8 +14,8 @@
 - Server: Spring Boot (Docker)
 - Database: MySQL 8
 - Dataset
-    - Creation: 7,000
-    - Episode: 518,146
+    - Creations: 7,000건
+    - Episodes: 518,146건
 
 ### 부하 테스트 Scenario 상세
 | Stage | Duration | VUs | Description |
@@ -99,7 +98,7 @@ select count(*) from episode; -- 에피소드 수 518,146건(에피소드는 한
 ----
 
 ### 첫번째 개선
-- Before: 하나의 Creation(작품)당 모든 Episode 테이블을 JOIN → GROUP BY → SUM() 집계(Episode 518k rows scan이 발생하므호 GROUP BY 비용 증가)
+- Before: 하나의 Creation(작품)당 모든 Episode 테이블을 JOIN → GROUP BY → SUM() 집계(Episode 518k rows scan이 발생하므로 GROUP BY 비용 증가)
 - After: Creation에 사전 계산된 집계 컬럼(totalViewCount, totalLikeCount, totalRatingAverage, totalRatingCount)을 추가해 직접 사용
  
  | 쿼리 | 변경 전 | 변경 후 |

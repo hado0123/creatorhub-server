@@ -28,18 +28,20 @@
 - JWT 기반 인증
 - Redis TTL 기반 Refresh Token 관리
 
----
+<br/>
 
-## ☁️ 1. 아키텍쳐 다이어그램
+## ☁️ 아키텍쳐 다이어그램
 <img src="./docs/images/total_architecture.png" width="800" alt="아키텍쳐" />
 
----
-## 🗄️ 2. ERD
+<br/>
+
+## 🗄️ ERD
 [ERD 상세 보기(클릭)](https://www.erdcloud.com/d/acRK6DAyfKdTHhQCe)
 <img src="./docs/images/creatorhub_erd.png" alt="erd" />
 
----
-## 🛠️ 2. 기술 스택
+<br/>
+
+## 🛠️ 기술 스택
 
 ### Backend
 - JDK 21
@@ -57,9 +59,9 @@
 - Prometheus + Grafana (모니터링)
 - k6 (부하 테스트)
 
----
+<br/>
 
-## 📦 3. 프로젝트 구조
+## 📦 프로젝트 구조
 
 ### 1) Application
 
@@ -106,9 +108,9 @@ Dockerfile # 배포용 컨테이너 이미지 빌드용
 ```
 - 개발/운영 환경을 분리한 Docker 컨테이너 기반 배포 구조
 
----
+<br/>
 
-## ⭐ 4. ISSUE 및 해결방법
+## ⭐ ISSUE 및 해결방법
 
 ### 1. 썸네일·원고 이미지 처리
 [💡이미지 처리 문제 해결 과정 상세보기(클릭)](docs/architecture/creation-image-upload-resize.md)
@@ -136,24 +138,24 @@ Dockerfile # 배포용 컨테이너 이미지 빌드용
 - Decision: **Redis 사용**
 - Reason: TTL 기반 자동 만료로 토큰 정리 작업을 최소화하고 인증 요청 성능 확보
 
-### 4. 요일별 웹툰 조회시 대량 데이터 페이징 처리
+### 3. 요일별 웹툰 조회시 대량 데이터 페이징 처리
 - Issue: Offset 기반 페이징은 데이터 증가 시 성능 저하 발생
 - Decision: **Cursor 기반 페이징** 적용
 - Reason: 대량 데이터 조회 시 성능 저하 방지 및 안정적인 페이지 탐색 가능
 
-### 5. 데이터 무결성 처리
+### 4. 데이터 무결성 처리
 - Issue: 관심작품, 좋아요 등 사용자 행동 데이터의 동시 요청 처리 필요
 - Decision: **DB Unique 제약조건과 원자적 업데이트 쿼리** 사용
 - Reason: 중복 데이터 방지 및 데이터 일관성 유지
 
-### 6. DB 스키마 관리
+### 5. DB 스키마 관리
 - Issue: DB 스키마 변경 이력 관리 필요
 - Decision: **Flyway 기반 Migration 적용**
 - Reason: 버전 기반 스키마 관리 및 환경 간 DB 불일치 방지
 
----
+<br/>
 
-## ⚙️ 5. 설계 규칙
+## ⚙️ 설계 규칙
 ### 1. DB / Entity 설계 정책
 [💡RDB 설계 원칙과 제약조건 상세보기(클릭)](docs/db/schema-policy.md) <br/>
   - 도메인 식별자 및 사용자 액션(좋아요, 관심작품, 평점 등)은 DB `UNIQUE` 제약으로 중복을 차단하여 데이터 무결성과 멱등성 보장
@@ -172,13 +174,54 @@ Dockerfile # 배포용 컨테이너 이미지 빌드용
 ### 3. Lambda Callback HMAC 검증
 - 이미지 리사이징 완료시 백엔드 콜백 요청에 대해 HMAC 검증 적용 → 외부 요청 위변조 방지
 
----
+<br/>
 
-## 📊 6. 성능 테스트
+## 📊 성능 테스트
+- Prometheus, Grafana를 통한 모니터링 환경 구현 + k6 부하 테스트
 
----
+### 1. 요일별 웹툰 조회 API
 
-## 🐳 7. Docker 기반 실행/배포
+#### DataSet
+- Creations(작품): 7,000건
+- Episodes(회차): 518,146건
+
+#### 개선 결과
+| Metric       | Before   | After                 |
+|--------------| -------- | --------------------- |
+| Throughput(TPS) | 93 req/s | **935 req/s (10배 ↑)** |
+| P95 Latency  | 3.13 s   | **400 ms (87% ↓)**    |
+
+#### 핵심 개선 포인트
+- Episode 테이블 518k rows JOIN + GROUP BY 집계 제거
+- Creation 테이블에 사전 집계 컬럼(totalViewCount 등) 도입
+- JPQL → Native Query 변경 및 JOIN 구조 개선
+- 쿼리 3회 호출 → 1회 조회로 통합
+
+[💡자세한 성능 분석 과정(클릭)](docs/performance/creation-list-load-improvements.md)
+
+### 2. 특정 회차 웹툰 조회 API
+
+#### DataSet
+- Creations(작품): 7,000건
+- Episodes(회차): 518,146건
+
+#### 개선 결과
+| Metric      | Before    | After                   |
+| ----------- | --------- | ----------------------- |
+| Throughput  | 151 req/s | **1,679 req/s (11배 ↑)** |
+| P95 Latency | 1.97 s    | **268 ms (86% ↓)**      |
+
+#### 핵심 개선 포인트
+- 조회수 업데이트 로직을 @Async 비동기 처리로 분리하여 응답 경로에서 DB UPDATE 제거
+- SUM(view_count) 집계 쿼리를 단순 증가(+1) 방식으로 변경
+- Caffeine 인메모리 캐시 적용으로 반복 조회 구간의 DB 접근 감소
+- HikariCP 커넥션 풀 및 Async 스레드풀 튜닝으로 동시 요청 처리 개선
+
+[💡자세한 성능 분석 과정(클릭)](docs/performance/episode-read-load-improvements.md)
+
+<br/>
+
+## 🐳 Docker 기반 실행/배포
 
 - MySQL DB, Redis, Spring Boot 앱(creatorhub-server)을 Docker Compose를 통해 실행할 수 있습니다. 
 - 모든 민감한 설정 값은 실행 시 환경변수(.env)로 주입합니다.
