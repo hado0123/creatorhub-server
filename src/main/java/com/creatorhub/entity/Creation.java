@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -53,6 +54,21 @@ public class Creation extends BaseSoftDeleteEntity {
     @Column
     private Integer favoriteCount;
 
+    @Column
+    private Integer totalViewCount;
+
+    @Column
+    private Integer totalLikeCount;
+
+    @Column
+    private Integer totalRatingSum;
+
+    @Column
+    private Integer totalRatingCount;
+
+    @Column(precision = 4, scale = 3)
+    private BigDecimal totalRatingAverage;
+
     // 연재요일은 자주 바뀌지 않으므로 별도의 엔티티가 아닌 @ElementCollection사용
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(
@@ -89,6 +105,11 @@ public class Creation extends BaseSoftDeleteEntity {
         this.plot = plot;
         this.isPublic = isPublic;
         this.favoriteCount = 0;
+        this.totalViewCount = 0;
+        this.totalLikeCount = 0;
+        this.totalRatingSum = 0;
+        this.totalRatingCount = 0;
+        this.totalRatingAverage = BigDecimal.ZERO;
     }
 
     public static Creation create(Creator creator,

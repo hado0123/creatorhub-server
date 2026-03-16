@@ -6,10 +6,12 @@ import com.creatorhub.entity.EpisodeLike;
 import com.creatorhub.entity.Member;
 import com.creatorhub.exception.episode.EpisodeNotFoundException;
 import com.creatorhub.exception.member.MemberNotFoundException;
+import com.creatorhub.repository.CreationRepository;
 import com.creatorhub.repository.EpisodeLikeRepository;
 import com.creatorhub.repository.EpisodeRepository;
 import com.creatorhub.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +22,13 @@ public class EpisodeLikeService {
     private final EpisodeLikeRepository episodeLikeRepository;
     private final EpisodeRepository episodeRepository;
     private final MemberRepository memberRepository;
+    private final CreationRepository creationRepository;
 
     /**
      * (회차별) 좋아요
      */
     @Transactional
+    @CacheEvict(value = "episodeDetail", key = "#episodeId")
     public EpisodeLikeResponse like(Long memberId, Long episodeId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(MemberNotFoundException::new);
@@ -41,6 +45,7 @@ public class EpisodeLikeService {
         }
 
         episodeRepository.updateLikeCount(episodeId, 1);
+        creationRepository.updateTotalLikeCount(episode.getCreation().getId(), 1);
 
         return EpisodeLikeResponse.of(episodeId, true);
     }
@@ -57,13 +62,17 @@ public class EpisodeLikeService {
      * (회차별) 좋아요 해제
      */
     @Transactional
+    @CacheEvict(value = "episodeDetail", key = "#episodeId")
     public EpisodeLikeResponse unlike(Long memberId, Long episodeId) {
         // delete row count 기반 멱등 처리 (동시성에서도 count 정합성 보장)
         int deleted = episodeLikeRepository
                 .deleteByMemberIdAndEpisodeId(memberId, episodeId);
 
         if (deleted > 0) {
+            Episode episode = episodeRepository.findById(episodeId)
+                    .orElseThrow(EpisodeNotFoundException::new);
             episodeRepository.updateLikeCount(episodeId, -1);
+            creationRepository.updateTotalLikeCount(episode.getCreation().getId(), -1);
         }
 
         return EpisodeLikeResponse.of(episodeId, false);

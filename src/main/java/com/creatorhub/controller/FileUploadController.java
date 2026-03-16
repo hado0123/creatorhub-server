@@ -118,7 +118,11 @@ public class FileUploadController {
         // SSE send
         String baseKey = req.baseKey();
         if (baseKey != null && !baseKey.isBlank()) {
-            sseEmitters.send(baseKey, SseEventType.RESIZE_COMPLETE, result);
+            Map<String, Object> payload = Map.of(
+                    "callbackReceivedAt", System.currentTimeMillis(),
+                    "files", result
+            );
+            sseEmitters.send(baseKey, SseEventType.RESIZE_COMPLETE, payload);
         }
 
         return ResponseEntity.ok().build();

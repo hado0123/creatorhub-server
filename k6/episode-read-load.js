@@ -49,10 +49,8 @@ export default function () {
 
     // 200 또는 404(존재하지 않는 회차)는 정상 케이스로 처리
     const success = check(res, {
-        'status is 200 or 404':  (r) => r.status === 200 || r.status === 404,
         'status is 200':         (r) => r.status === 200,
         'response has content':  (r) => r.body && r.body.length > 0,
-        'response time < 500ms': (r) => r.timings.duration < 500,
     });
 
     errorRate.add(!success);

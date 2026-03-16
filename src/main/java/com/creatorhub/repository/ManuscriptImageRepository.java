@@ -16,11 +16,9 @@ public interface ManuscriptImageRepository extends JpaRepository<ManuscriptImage
         FROM ManuscriptImage mi
         JOIN mi.fileObject fo
         WHERE mi.episode.id = :episodeId
-          AND mi.episode.creation.id = :creationId
         ORDER BY mi.displayOrder ASC
     """)
     List<ManuscriptRowProjection> findManuscripts(
-            @Param("creationId") Long creationId,
             @Param("episodeId") Long episodeId
     );
 }

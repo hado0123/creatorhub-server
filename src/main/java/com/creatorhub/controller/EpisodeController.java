@@ -6,6 +6,7 @@ import com.creatorhub.dto.episode.EpisodeRequest;
 import com.creatorhub.dto.episode.EpisodeResponse;
 import com.creatorhub.security.auth.CustomUserPrincipal;
 import com.creatorhub.service.EpisodeService;
+import com.creatorhub.service.ViewCountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ import java.util.List;
 public class EpisodeController {
 
     private final EpisodeService episodeService;
+    private final ViewCountService viewCountService;
 
     /**
      * 회차 등록 + 원고/썸네일 매핑 insert
@@ -54,6 +56,7 @@ public class EpisodeController {
             @PathVariable Long creationId,
             @PathVariable Long episodeId
     ) {
+        viewCountService.increment(episodeId, creationId);
         return episodeService.getEpisodeDetail(creationId, episodeId);
     }
 }

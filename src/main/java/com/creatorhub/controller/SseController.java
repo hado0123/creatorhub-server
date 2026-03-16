@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/sse")
 @RequiredArgsConstructor
@@ -24,7 +26,10 @@ public class SseController {
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe(@RequestParam String baseKey) {
         SseEmitter emitter = sseEmitters.add(baseKey);
-        sseEmitters.send(baseKey, SseEventType.CONNECTED, "baseKey: " + baseKey);
+        sseEmitters.send(baseKey, SseEventType.CONNECTED, Map.of(
+                "baseKey", baseKey,
+                "serverTime", System.currentTimeMillis()
+        ));
         return emitter;
     }
 }

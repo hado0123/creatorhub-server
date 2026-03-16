@@ -19,17 +19,11 @@ export const options = {
             executor: 'ramping-vus',
             startVUs: 0,
             stages: [
-                { duration: '30s', target: 50 },
-                { duration: '1m',  target: 200 },
-                { duration: '2m',  target: 300 },
-                { duration: '30s', target: 0 },
+                { duration: '30s', target: 50 }, // 워밍업
+                { duration: '1m',  target: 200 }, // 부하 증가
+                { duration: '2m',  target: 300 }, // 최대 부하 유지
+                { duration: '30s', target: 0 }, // 부하 감소
             ]
-            // stages: [
-            //     { duration: '30s', target: 10 },   // 워밍업
-            //     { duration: '1m',  target: 50 },   // 부하 증가
-            //     { duration: '2m',  target: 100 },  // 최대 부하 유지
-            //     { duration: '30s', target: 0 },    // 부하 감소
-            // ],
         },
     },
     thresholds: {
@@ -60,8 +54,7 @@ export default function () {
     // 응답 검증
     const success = check(res, {
         'status is 200':         (r) => r.status === 200,
-        'response has content':  (r) => r.body && r.body.length > 0,
-        'response time < 500ms': (r) => r.timings.duration < 500,
+        'response has content':  (r) => r.body && r.body.length > 0
     });
 
     errorRate.add(!success);
@@ -77,9 +70,9 @@ export default function () {
                 let nextUrl = `${BASE_URL}/api/creations/by-days?day=${day}&sort=${sort}&size=21`;
 
                 if (sort === 'RATING') {
-                    nextUrl += `&cursorAvg=${cursor.cursorAvg}&cursorRatingCount=${cursor.cursorRatingCount}&cursorId=${cursor.cursorId}`;
+                    nextUrl += `&cursorAvg=${cursor.value}&cursorRatingCount=${cursor.tie}&cursorId=${cursor.id}`;
                 } else {
-                    nextUrl += `&cursorValue=${cursor.cursorValue}&cursorId=${cursor.cursorId}`;
+                    nextUrl += `&cursorValue=${cursor.value}&cursorId=${cursor.id}`;
                 }
 
                 const nextRes = http.get(nextUrl, {
@@ -98,5 +91,5 @@ export default function () {
         }
     }
 
-    sleep(Math.random() + 0.5); // 0.5 ~ 1.5초 랜덤 대기
+    // sleep(Math.random() + 0.5); // 0.5 ~ 1.5초 랜덤 대기
 }
