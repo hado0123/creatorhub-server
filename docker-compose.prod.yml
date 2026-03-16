@@ -28,3 +28,14 @@ services:
     networks:
       - creatorhub-network
     restart: unless-stopped
+
+  frontend:
+#    image: docker계정id/creatorhub-frontend:1.0
+    container_name: creatorhub-frontend
+    ports:
+      - "80:80"
+    networks:
+      - creatorhub-network
+    depends_on:
+      - app
+    restart: unless-stopped
