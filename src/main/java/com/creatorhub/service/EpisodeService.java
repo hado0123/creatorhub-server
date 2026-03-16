@@ -34,7 +34,6 @@ public class EpisodeService {
     private final ManuscriptImageRepository manuscriptImageRepository;
     private final ManuscriptImageService manuscriptImageService;
     private final EpisodeThumbnailService episodeThumbnailService;
-    private final ViewCountService viewCountService;
 
     @Value("${cloud.front.base}")
     private String cloudfrontBase;
@@ -132,7 +131,11 @@ public class EpisodeService {
     /**
      * 특정 작품의 회차 원고 조회 + 조회수 증가
      */
-    @Cacheable(value = "episodeDetail", key = "#creationId + ':' + #episodeId")
+    @Cacheable(
+            value = "episodeDetail",
+            key = "#creationId + ':' + #episodeId",
+            sync = true
+    )
     public EpisodeDetailResponse getEpisodeDetail(
             Long creationId,
             Long episodeId
@@ -145,12 +148,10 @@ public class EpisodeService {
                 );
 
         List<String> storageKeys = manuscriptImageRepository
-                .findManuscripts(creationId, episodeId)
+                .findManuscripts(episodeId)
                 .stream()
                 .map(ManuscriptRowProjection::getStorageKey)
                 .toList();
-
-        viewCountService.incrementAsync(episodeId, creationId);
 
         return EpisodeDetailResponse.from(meta, cloudfrontBase, storageKeys);
     }

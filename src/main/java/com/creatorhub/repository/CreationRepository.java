@@ -71,14 +71,13 @@ public interface CreationRepository extends JpaRepository<Creation, Long> {
             @Param("posterType") CreationThumbnailType posterType
     );
 
-    // 조회수 증가: +1 단순 증가 (SUM 집계 서브쿼리 제거)
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         UPDATE Creation c
-           SET c.totalViewCount = COALESCE(c.totalViewCount, 0) + 1
+           SET c.totalViewCount = COALESCE(c.totalViewCount, 0) + :delta
          WHERE c.id = :creationId
     """)
-    void incrementTotalViewCount(@Param("creationId") Long creationId);
+    void incrementTotalViewCountBy(@Param("creationId") Long creationId, @Param("delta") long delta);
 
     // 좋아요 집계: delta 증감
     @Modifying(clearAutomatically = true, flushAutomatically = true)
