@@ -11,6 +11,7 @@ import com.creatorhub.repository.EpisodeLikeRepository;
 import com.creatorhub.repository.EpisodeRepository;
 import com.creatorhub.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ public class EpisodeLikeService {
      * (회차별) 좋아요
      */
     @Transactional
+    @CacheEvict(value = "episodeDetail", key = "#episodeId")
     public EpisodeLikeResponse like(Long memberId, Long episodeId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(MemberNotFoundException::new);
@@ -60,6 +62,7 @@ public class EpisodeLikeService {
      * (회차별) 좋아요 해제
      */
     @Transactional
+    @CacheEvict(value = "episodeDetail", key = "#episodeId")
     public EpisodeLikeResponse unlike(Long memberId, Long episodeId) {
         // delete row count 기반 멱등 처리 (동시성에서도 count 정합성 보장)
         int deleted = episodeLikeRepository

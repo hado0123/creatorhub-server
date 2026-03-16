@@ -131,11 +131,7 @@ public class EpisodeService {
     /**
      * 특정 작품의 회차 원고 조회 + 조회수 증가
      */
-    @Cacheable(
-            value = "episodeDetail",
-            key = "#creationId + ':' + #episodeId",
-            sync = true
-    )
+    @Cacheable(value = "episodeDetail", key = "#episodeId", sync = true)
     public EpisodeDetailResponse getEpisodeDetail(
             Long creationId,
             Long episodeId
