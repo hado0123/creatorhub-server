@@ -186,16 +186,17 @@ Dockerfile # 배포용 컨테이너 이미지 빌드용
 - Episodes(회차): 518,146건
 
 #### 개선 결과
-| Metric       | Before   | After                 |
-|--------------| -------- | --------------------- |
-| Throughput(TPS) | 93 req/s | **935 req/s (10배 ↑)** |
-| P95 Latency  | 3.13 s   | **400 ms (87% ↓)**    |
+| Metric       | Before   | After                     |
+|--------------| -------- |---------------------------|
+| Throughput(TPS) | 93 req/s | **1,094 req/s (11.7배 ↑)** |
+| P95 Latency  | 3.13 s   | **297ms (90% ↓)**         |
 
 #### 핵심 개선 포인트
 - Episode 테이블 518k rows JOIN + GROUP BY 집계 제거
 - Creation 테이블에 사전 집계 컬럼(totalViewCount 등) 도입
 - JPQL → Native Query 변경 및 JOIN 구조 개선
 - 쿼리 3회 호출 → 1회 조회로 통합
+- 커넥션 풀, DB 메모리 증가
 
 [💡자세한 성능 분석 과정(클릭)](docs/performance/creation-list-load-improvements.md)
 
