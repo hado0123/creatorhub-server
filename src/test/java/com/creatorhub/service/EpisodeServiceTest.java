@@ -296,7 +296,7 @@ class EpisodeServiceTest {
     // ----------------------------------------------------------------------
 
     @Test
-    @DisplayName("getEpisodeDetail 성공: meta + 원고 storageKey 조회 후 CDN URL로 변환, viewCount 증가")
+    @DisplayName("getEpisodeDetail 성공: meta + 원고 storageKey 조회 후 CDN URL로 변환")
     void getEpisodeDetail_success() {
         long creationId = 100L;
         long episodeId = 1L;
@@ -317,7 +317,7 @@ class EpisodeServiceTest {
         given(row1.getStorageKey()).willReturn("upload/manuscript/1.jpg");
         given(row2.getStorageKey()).willReturn("upload/manuscript/2.jpg");
 
-        given(manuscriptImageRepository.findManuscripts(creationId, episodeId))
+        given(manuscriptImageRepository.findManuscripts(episodeId))
                 .willReturn(List.of(row1, row2));
 
         EpisodeDetailResponse res = episodeService.getEpisodeDetail(creationId, episodeId);
@@ -332,9 +332,6 @@ class EpisodeServiceTest {
                 CDN_BASE + "/upload/manuscript/1.jpg",
                 CDN_BASE + "/upload/manuscript/2.jpg"
         );
-
-        // 조회수 증가 호출 확인
-        then(episodeRepository).should(times(1)).incrementViewCount(episodeId);
     }
 
     @Test
@@ -353,14 +350,13 @@ class EpisodeServiceTest {
 
         given(episodeRepository.findEpisodeMeta(creationId, episodeId))
                 .willReturn(Optional.of(meta));
-        given(manuscriptImageRepository.findManuscripts(creationId, episodeId))
+        given(manuscriptImageRepository.findManuscripts(episodeId))
                 .willReturn(List.of());
 
         EpisodeDetailResponse res = episodeService.getEpisodeDetail(creationId, episodeId);
 
         assertThat(res.manuscriptImageUrls()).isEmpty();
         assertThat(res.ratingAverage()).isNull();
-        then(episodeRepository).should(times(1)).incrementViewCount(episodeId);
     }
 
     @Test
@@ -376,6 +372,5 @@ class EpisodeServiceTest {
                 .isInstanceOf(EpisodeNotFoundException.class);
 
         then(manuscriptImageRepository).shouldHaveNoInteractions();
-        then(episodeRepository).should(never()).incrementViewCount(anyLong());
     }
 }
