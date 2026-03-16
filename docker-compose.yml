@@ -11,6 +11,8 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
       - --default-time-zone=+09:00
+      - --innodb-buffer-pool-size=1G
+      - --innodb-buffer-pool-instances=2
     volumes:
       - ./mysql-data:/var/lib/mysql
     networks:

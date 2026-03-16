@@ -5,6 +5,9 @@
 
 ### 시연영상
 
+배포 사이트: https://creatorhub.site
+- 프론트엔드는 React + Vite, TypeScript 기반으로 구현되었습니다.
+
 ### 주요기능
 #### 👨‍🎨 작가 기능
 - 작품 등록(작품 정보, 썸네일 이미지 업로드)
@@ -20,7 +23,7 @@
 - SQS + Lambda 비동기 이미지 리사이징
 - SSE 기반 이미지 처리 완료 알림
 
-#### 💳 결제 시스템
+#### 💳 결제 시스템(진행중)
 - Toss Payments 결제 연동
 - 결제 검증 및 코인 충전
 
@@ -31,7 +34,7 @@
 <br/>
 
 ## ☁️ 아키텍쳐 다이어그램
-<img src="./docs/images/total_architecture.png" width="800" alt="아키텍쳐" />
+<img src="./docs/images/total_architecture.png" alt="아키텍쳐" />
 
 <br/>
 
@@ -186,16 +189,17 @@ Dockerfile # 배포용 컨테이너 이미지 빌드용
 - Episodes(회차): 518,146건
 
 #### 개선 결과
-| Metric       | Before   | After                 |
-|--------------| -------- | --------------------- |
-| Throughput(TPS) | 93 req/s | **935 req/s (10배 ↑)** |
-| P95 Latency  | 3.13 s   | **400 ms (87% ↓)**    |
+| Metric       | Before   | After                     |
+|--------------| -------- |---------------------------|
+| Throughput(TPS) | 93 req/s | **1,094 req/s (11.7배 ↑)** |
+| P95 Latency  | 3.13 s   | **297ms (90% ↓)**         |
 
 #### 핵심 개선 포인트
 - Episode 테이블 518k rows JOIN + GROUP BY 집계 제거
 - Creation 테이블에 사전 집계 컬럼(totalViewCount 등) 도입
 - JPQL → Native Query 변경 및 JOIN 구조 개선
 - 쿼리 3회 호출 → 1회 조회로 통합
+- HikariCP 커넥션 풀 및Mysql DB 메모리 튜닝
 
 [💡자세한 성능 분석 과정(클릭)](docs/performance/creation-list-load-improvements.md)
 
@@ -206,16 +210,16 @@ Dockerfile # 배포용 컨테이너 이미지 빌드용
 - Episodes(회차): 518,146건
 
 #### 개선 결과
-| Metric      | Before    | After                   |
-| ----------- | --------- | ----------------------- |
-| Throughput  | 151 req/s | **1,679 req/s (11배 ↑)** |
-| P95 Latency | 1.97 s    | **268 ms (86% ↓)**      |
+| Metric     | Before    | After                     |
+|------------| --------- |---------------------------|
+| Throughput | 151 req/s | **2,748.5 req/s (18배 ↑)** |
+| P95 Latency | 1.97 s    | **131.98ms (93% ↓)**      |
 
 #### 핵심 개선 포인트
+- Caffeine 인메모리 캐시 적용으로 반복 조회 구간의 DB 접근 감소
+- UPDATE LOCK 경쟁 발생시 UPDATE값을 Redis에 먼저 누적하고, 10초 주기 배치 작업으로 DB에 반영
 - 조회수 업데이트 로직을 @Async 비동기 처리로 분리하여 응답 경로에서 DB UPDATE 제거
 - SUM(view_count) 집계 쿼리를 단순 증가(+1) 방식으로 변경
-- Caffeine 인메모리 캐시 적용으로 반복 조회 구간의 DB 접근 감소
-- HikariCP 커넥션 풀 및 Async 스레드풀 튜닝으로 동시 요청 처리 개선
 
 [💡자세한 성능 분석 과정(클릭)](docs/performance/episode-read-load-improvements.md)
 

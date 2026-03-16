@@ -12,6 +12,7 @@ import com.creatorhub.repository.EpisodeRatingRepository;
 import com.creatorhub.repository.EpisodeRepository;
 import com.creatorhub.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,7 @@ public class EpisodeRatingService {
      * (회차별) 별점 등록 - 등록 후 갱신된 평균/개수 반환
      */
     @Transactional
+    @CacheEvict(value = "episodeDetail", key = "#episodeId")
     public EpisodeRatingStatusResponse rate(Long memberId, Long episodeId, int score) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(MemberNotFoundException::new);

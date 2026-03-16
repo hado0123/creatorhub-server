@@ -2,8 +2,8 @@
 
 ### 요약
 대용량 데이터(작품 7,000 / 에피소드 518k) 환경에서 요일별 웹툰 조회 API 성능 개선을 진행하여 아래와 같이 개선함
-- Throughput(TPS): 93 req/s → 935 req/s (10배 증가)
-- P95 Latency: 3.13s → 400ms (87% 감소)
+- Throughput(TPS): 93 → 1,094 req/s (약 11.7배 증가)
+- P95 Latency: 3.13s → 297ms (약 90% 감소)
 
 ---
 
@@ -97,9 +97,9 @@ select count(*) from episode; -- 에피소드 수 518,146건(에피소드는 한
 ```
 ----
 
-### 첫번째 개선
+### 첫번째 개선(1st Optimization)
 - Before: 하나의 Creation(작품)당 모든 Episode 테이블을 JOIN → GROUP BY → SUM() 집계(Episode 518k rows scan이 발생하므로 GROUP BY 비용 증가)
-- After: Creation에 사전 계산된 집계 컬럼(totalViewCount, totalLikeCount, totalRatingAverage, totalRatingCount)을 추가해 직접 사용
+- After: DB로 가는 네트워크 병목을 줄이기 위해 Creation에 사전 계산된 집계 컬럼(totalViewCount, totalLikeCount, totalRatingAverage, totalRatingCount)을 추가해 직접 사용
  
  | 쿼리 | 변경 전 | 변경 후 |
   |---|---|---|
@@ -107,7 +107,7 @@ select count(*) from episode; -- 에피소드 수 518,146건(에피소드는 한
   | findByDayOrderByLikesSeek | JOIN Episode + `SUM(e.likeCount)` | `c.totalLikeCount` |
   | findByDayOrderByRatingSeek | JOIN Episode + `SUM/CASE` 계산 | `c.totalRatingAverage`, `c.totalRatingCount` |
 
-### 첫번째 개선 후(1st Optimization)
+### 첫번째 개선 후
 - 수치가 다소 좋아졌으나 여전히 P95 Response Time가 500ms이 넘어감
 - **P95 Response Time을 500ms 이하로 목표**
 
@@ -142,7 +142,7 @@ select count(*) from episode; -- 에피소드 수 518,146건(에피소드는 한
 
 ---
 
-### 두번째 개선
+### 두번째 개선후(2nd Optimization)
 
 #### [connection pool 증가 후 확인]
 <img src="../images/hikaricp_pool.png" width="870" alt="hikaricp connection pool" />
@@ -153,7 +153,7 @@ select count(*) from episode; -- 에피소드 수 518,146건(에피소드는 한
   - CreationService: findByIdIn, findPostersByCreationIds 호출 제거
 - JPQL → 네이티브로 변경: MEMBER OF 제거, COALESCE 제거, LIMIT: size 직접 사용
 
-### 두번째 개선 후(Final Optimization)
+### 두번째 개선 
 | Metric | Result |
 |---|---|
 | Total Requests | 204,197 |
@@ -185,6 +185,44 @@ select count(*) from episode; -- 에피소드 수 518,146건(에피소드는 한
 
 ---
 
+### 세번째 개선(3rd Optimization)
+- 두번째 개선 후에도 P95가 200ms 정도 줄어든 미흡한 수치 개선을 보임
+- 부하 테스트 중 connection pool 대기(pending) 수치가 높게 나타나, DB 커넥션 점유 시간과 메모리 캐시 효율을 함께 개선
+- 부하 개선을 위해 connection pool을 다시 10으로 바꾸고 → 20으로 증가
+- Mysql DB 메모리를 기존 218MB → 1GB 로 증가
+
+### 세번째 개선 후
+| Metric | Result      |
+|---|-------------|
+| Total Requests | 294,837     |
+| Throughput | 1,094 req/s |
+| Error Rate | 0.04%       |
+| Avg Response Time | 132.95 ms   |
+| P90 Response Time | 236.11 ms   |
+| P95 Response Time | 297.63 ms   |
+| P99 Response Time | 404.38 ms   |
+| Max Response Time | 1.06 s      |
+
+```
+    error_rate
+    ✓ 'rate<0.01' rate=0.04%
+
+    http_req_duration
+    ✓ 'p(95)<500' p(95)=297.63ms
+    ✓ 'p(99)<1000' p(99)=404.38ms
+    
+    ...
+
+    HTTP
+    http_req_duration..............: avg=132.95ms min=0s      med=134.38ms max=1.06s  p(90)=236.11ms p(95)=297.63ms
+      { expected_response:true }...: avg=133ms    min=4.67ms  med=134.41ms max=1.06s  p(90)=236.12ms p(95)=297.79ms
+    http_req_failed................: 0.04%  127 out of 294837
+    http_reqs......................: 294837 1094.299742/s
+    
+    ...
+```
+---
+
 ### 그 밖에 INDEX 적용 시도
 
 아래 조회 쿼리에 대해 `(publish_day, creation_id)` 인덱스를 적용했으나 오히려 성능이 저하되는 현상이 발생
@@ -210,18 +248,14 @@ WHERE c.is_public = true
 
 ---
 
-### 최종 TPS 변화
-<img src="../images/tps.png" width="870" alt="tps" />
-
 ### 부하 테스트 수치 변화
-
-| Metric | Before | 1st Optimization | Final Optimization |
-|---|---|---|---|
-| Total Requests | 22,614 | 114,460 | 204,197 |
-| Throughput | 93 req/s | 474 req/s | 935 req/s |
-| Error Rate | 0% | 0% | 0.02% |
-| Avg Response Time | 1.91 s | 374.83 ms | 204.67 ms |
-| P90 Response Time | 2.96 s | 587.45 ms | 353.79 ms |
-| P95 Response Time | 3.13 s | 626.42 ms | 400.65 ms |
-| P99 Response Time | 3.35 s | 906.53 ms | 646.02 ms |
-| Max Response Time | 5.35 s | 1.6 s | 1.69 s |
+| Metric            | Before   | 1st Optimization | 2nd Optimization | 3rd Optimization |
+| ----------------- | -------- | ---------------- | ---------------- | ---------------- |
+| Total Requests    | 22,614   | 114,460          | 204,197          | 294,837          |
+| Throughput        | 93 req/s | 474 req/s        | 935 req/s        | 1,094 req/s      |
+| Error Rate        | 0%       | 0%               | 0.02%            | 0.04%            |
+| Avg Response Time | 1.91 s   | 374.83 ms        | 204.67 ms        | 132.95 ms        |
+| P90 Response Time | 2.96 s   | 587.45 ms        | 353.79 ms        | 236.11 ms        |
+| P95 Response Time | 3.13 s   | 626.42 ms        | 400.65 ms        | 297.63 ms        |
+| P99 Response Time | 3.35 s   | 906.53 ms        | 646.02 ms        | 404.38 ms        |
+| Max Response Time | 5.35 s   | 1.6 s            | 1.69 s           | 1.06 s           |

@@ -73,10 +73,10 @@ public interface EpisodeRepository extends JpaRepository<Episode, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         UPDATE Episode e
-           SET e.viewCount = COALESCE(e.viewCount, 0) + 1
+           SET e.viewCount = COALESCE(e.viewCount, 0) + :delta
          WHERE e.id = :episodeId
     """)
-    void incrementViewCount(@Param("episodeId") Long episodeId);
+    void incrementViewCountBy(@Param("episodeId") Long episodeId, @Param("delta") long delta);
 
     // 별점 최초 등록: sum += score, count += 1, average = sum/(count + 1)
     @Modifying(clearAutomatically = true, flushAutomatically = true)
