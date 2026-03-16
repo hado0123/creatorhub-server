@@ -3,9 +3,8 @@
 
 ### 요약
 대용량 데이터(작품 7,000 / 에피소드 518k) 환경에서 웹툰 회차 조회 API 성능 개선을 진행하여 아래와 같이 개선함
-- Throughput(TPS): 151 req/s → 1,679 req/s (11배 증가)
-- P95 Latency: 1.97s → 268.45ms (86% 감소)
-- 주요 개선: 조회수 UPDATE 비동기 처리 + Caffeine 캐시 적용
+- Throughput: 151.98 req/s → 2,748.5 req/s (약 18배 증가)
+- P95 Latency: 1.97s → 131.98ms (약 93% 감소)
 
 ---
 
@@ -64,7 +63,7 @@
 
 ----
 
-### 첫번째 개선
+### 첫번째 개선(1st Optimization)
 
 ####  1. 비동기 처리
 - **Before:** incrementViewCount + updateTotalViewCount 2개의 UPDATE가 응답 경로에 동기 실행 → 300VU가 같은 행에 UPDATE 락 경쟁 → 대기 시간 누적(직렬화)
@@ -150,42 +149,115 @@
       }
     ```
 
-### 첫번째 개선 후(1st Optimization)
-- 응답 시간이 약 **0.4s(400ms) 감소**하여 개선 효과는 있었지만 여전히 목표 성능(P95 < 300ms)에 미달
+### 첫번째 개선 후
+- Throughput(TPS)는 151.98 req/s → 195.2 req/s
+- P95 Response Time은 1.97s → 1.9 s
+- 수치상 거의 개선되지 않음
 
-| Metric | Result |
-|---|---|
-| Total Requests | 55,552 |
-| Throughput | **231.47 req/s** |
-| Error Rate | **0.00% (3 / 55,552)** |
-| Avg Response Time | 767.45 ms |
-| P90 Response Time | 1.43 s |
-| P95 Response Time | 1.47 s |
-| P99 Response Time | 1.51 s |
-| Max Response Time | 2.47 s |
+| Metric | Result          |
+|---|-----------------|
+| Total Requests | 46,640          |
+| Throughput | **195.2 req/s** |
+| Error Rate | **0.00%**       |
+| Avg Response Time | 913.68 ms       |
+| P90 Response Time | 1.82 s          |
+| P95 Response Time | 1.9 s           |
+| P99 Response Time | 1.99 s          |
+| Max Response Time | 3.07 s          |
 
 ```
     error_rate
     ✓ 'rate<0.01' rate=0.00%
 
     http_req_duration
-    ✗ 'p(95)<500' p(95)=1.47s
-    ✗ 'p(99)<1000' p(99)=1.51s
+    ✗ 'p(95)<500' p(95)=1.9s
+    ✗ 'p(99)<1000' p(99)=1.99s
     
     ...
 
     HTTP
-    http_req_duration..............: avg=767.45ms min=0s     med=896.23ms max=2.47s p(90)=1.43s p(95)=1.47s
-      { expected_response:true }...: avg=767.49ms min=3.84ms med=896.25ms max=2.47s p(90)=1.43s p(95)=1.47s
-    http_req_failed................: 0.00%  3 out of 55552
-    http_reqs......................: 55552  231.470161/s
+    http_req_duration..............: avg=913.68ms min=309.84µs med=985.45ms max=3.07s p(90)=1.82s p(95)=1.9s
+      { expected_response:true }...: avg=913.68ms min=309.84µs med=985.45ms max=3.07s p(90)=1.82s p(95)=1.9s
+    http_req_failed................: 0.00%  0 out of 46640
+    http_reqs......................: 46640  195.200892/s
     
     ...
 ```
 
 ---
 
-### 두번째 개선
+### 두번째 개선(2nd Optimization)
+- **Before:**
+  - 비동기 처리를 했음에도 계속해서 커넥션 풀 고갈 현상이 발생하며, 단순 회차 조회만 하는 경우 p(95)=201.78ms 정도의 응답속도가 나옴
+  - 가장 요청이 몰릴때 `SHOW ENGINE INNODB STATUS;` 쿼리문을 통해 InnoDB 내부 상태 확인 
+  - 아래와 같이 동시 UPDATE LOCK 경쟁 발생
+    ```sql
+    update episode e1_0 
+    set view_count=(coalesce(e1_0.view_count,0)+1) 
+    where e1_0.id=7792 
+    and (e1_0.deleted_at IS NULL) 
+    ```
+
+    ```
+    LOCK WAIT ... lock_mode X locks rec but not gap waiting
+    ```
+- **After:**
+  - 조회수는 느슨한 일관성이므로 이를 해결하기 위해 조회수 증가를 Redis에 먼저 누적하고, 10초 주기 배치 작업으로 DB에 반영하는 구조로 변경
+    - 요청마다 UPDATE episode + UPDATE creation 요청마다 Redis INCR 
+    ```
+    public void increment(Long episodeId, Long creationId) {
+        redisTemplate.opsForValue().increment(EPISODE_KEY_PREFIX  + episodeId);
+        redisTemplate.opsForValue().increment(CREATION_KEY_PREFIX + creationId);
+    }
+    ```
+    - 10초마다 쌓인 조회수(delta 값)를 DB에 한 번에 UPDATE
+    ```
+    @Scheduled(fixedDelay = 10_000)
+    @Transactional
+    public void flush() {
+        flushPattern(EPISODE_KEY_PREFIX,
+                episodeRepository::incrementViewCountBy);
+        flushPattern(CREATION_KEY_PREFIX,
+                creationRepository::incrementTotalViewCountBy);
+    }
+    ```
+    
+### 두번째 개선 후
+| Metric | Result        |
+|---|---------------|
+| Total Requests | 341,144       |
+| Throughput | 1,265.7 req/s |
+| Error Rate | 0.01%         |
+| Avg Response Time | 122.14 ms     |
+| P90 Response Time | 217.4 ms     |
+| P95 Response Time | 282ms ms     |
+| P99 Response Time | 369.49ms     |
+| Max Response Time | 924.68ms      |
+
+```
+    error_rate
+    ✓ 'rate<0.01' rate=0.01%
+
+    http_req_duration
+    ✓ 'p(95)<500' p(95)=282ms
+    ✓ 'p(99)<1000' p(99)=369.49ms
+
+    ...
+
+    HTTP
+    http_req_duration..............: avg=122.14ms min=0s     med=130.91ms max=924.68ms p(90)=217.4ms p(95)=282ms   
+      { expected_response:true }...: avg=122.15ms min=5.15ms med=130.96ms max=924.68ms p(90)=217.4ms p(95)=282.01ms
+    http_req_failed................: 0.01%  51 out of 341144
+    http_reqs......................: 341144 1265.786807/s
+    ...
+```
+
+
+
+
+---
+
+### 세번째 개선(3rd Optimization)
 
 <img src="../images/hikaricp_pool2.png" width="870" alt="hikaricp connection pool" />
 
@@ -193,7 +265,10 @@
   - 에피소드 상세 조회 API에 동일하거나 반복적인 조회 요청이 많이 발생했지만, 매 요청마다 DB에서 상세 데이터를 다시 조회
   - HikariCP 커넥션 풀(20개)에 대한 경쟁이 심해졌고, 동시 사용자 300 VU 환경에서 커넥션 대기 시간과 응답 지연이 누적
 
-- **After:** Caffeine 인메모리 캐시 적용을 통해 캐시 hit 시 에피소드 상세 조회를 DB 대신 JVM 메모리에서 처리하여, 반복 조회 구간의 DB 접근 횟수와 커넥션 경쟁을 줄임
+- **After:** 
+  - Caffeine 인메모리 캐시 적용을 통해 캐시 hit 시 에피소드 상세 조회를 DB 대신 JVM 메모리에서 처리하여, 반복 조회 구간의 DB 접근 횟수와 커넥션 경쟁을 줄임
+  - 테스트 중 캐시 스탬피드 현상이 발생해 `sync = true` 적용
+    - k6로 부하 테스트 시 VU 50개가 동시에 같은 에피소드 첫 요청을 보내면 Caffeine 캐시가 모두 miss 처리되면서 50개 요청이 전부 DB를 동시에 때림
 
 ```
 @EnableCaching
@@ -210,56 +285,65 @@ public class CacheConfig {
 }
 ```
 ```
-@Cacheable(value = "episodeDetail", key = "#creationId + ':' + #episodeId") 
+@Cacheable(
+     value = "episodeDetail",
+     key = "#creationId + ':' + #episodeId",
+     sync = true
+)
 public EpisodeDetailResponse getEpisodeDetail(Long creationId, Long episodeId) { 
     ... 
 }
 ```
 
-### 두번째 개선 후(Final Optimization)
-| Metric | Result         |
-|---|----------------|
-| Total Requests | 403,903        |
-| Throughput | 1,679.48 req/s |
-| Error Rate | 0%             |
-| Avg Response Time | 103.28 ms      |
-| P90 Response Time | 219.72 ms      |
-| P95 Response Time | 268.45 ms      |
-| P99 Response Time | 354.98 ms      |
-| Max Response Time | 917.05ms       |
+### 세번째 개선 후
+<img src="../images/hikaricp_pool3.png" width="870" alt="hikaricp connection pool" />
 
+| Metric | Result            |
+|---|-------------------|
+| Total Requests | 691,812           |
+| Throughput | **2,748.5 req/s** |
+| Error Rate | **0.02%**         |
+| Avg Response Time | 54.13 ms          |
+| P90 Response Time | 110.76ms          |
+| P95 Response Time | 131.98ms          |
+| P99 Response Time | 183.07ms          |
+| Max Response Time | 461.72ms          |
 ```
     error_rate
-    ✗ 'rate<0.01' rate=100.00%
+    ✓ 'rate<0.01' rate=0.02%
 
     http_req_duration
-    ✓ 'p(95)<500' p(95)=268.45ms
-    ✓ 'p(99)<1000' p(99)=354.98ms
-    
-    ...
+    ✓ 'p(95)<500' p(95)=131.98ms
+    ✓ 'p(99)<1000' p(99)=183.07ms
 
+    ...
+    
     HTTP
-    http_req_duration....: avg=103.28ms min=0s med=82.54ms max=917.05ms p(90)=219.72ms p(95)=268.45ms
-    http_req_failed......: 100.00% 403903 out of 403903
-    http_reqs............: 403903  1679.481928/s
+    http_req_duration..............: avg=54.13ms min=0s    med=45.02ms max=461.72ms p(90)=110.76ms p(95)=131.98ms
+      { expected_response:true }...: avg=54.14ms min=1.1ms med=45.04ms max=461.72ms p(90)=110.77ms p(95)=131.98ms
+    http_req_failed................: 0.02%  146 out of 691812
+    http_reqs......................: 691812 2748.505308/s
     ...
 ```
+---
+
+### 기타
+- 차후 첫번째 개선에서 적용한 비동기를 제거하니 아래와 같은 미약한 수치 변화를 보임
+- Throughput(TPS)는 2748.50 req/s → 2338.35 req/s
+- P95 Response Time은 131.98ms → 123.07ms
+- 결론적으로 전체 구조 복잡도만 증가하고 성능개선에 비동기는 유의미하지 않다고 판단해 제거
 
 ---
 
-### 최종 TPS 변화
-<img src="../images/tps2-1.png" width="370" alt="tps" />
-<img src="../images/tps2-2.png" width="870" alt="tps" />
-
 ### 부하 테스트 수치 변화
 
-| Metric | Before | 1st Optimization | Final Optimization |
-|---|---|---|------------------|
-| Total Requests | 36,498 | 55,552 | 403,903          |
-| Throughput | 151.98 req/s | 231.47 req/s | **1,679.48 req/s** |
-| Error Rate | 0.00% | 0.00% | 0.00%            |
-| Avg Response Time | 1.17 s | 767.45 ms | **103.28ms**     |
-| P90 Response Time | 1.88 s | 1.43 s | **219.72m**      |
-| P95 Response Time | 1.97 s | 1.47 s | **268.45ms**     |
-| P99 Response Time | 2.08 s | 1.51 s | **354.98ms**     |
-| Max Response Time | 3.35 s | 2.47 s | **917.05ms**     |
+| Metric            | Before       | 1st Optimization | 2nd Optimization | 3rd Optimization  |
+| ----------------- | ------------ | ---------------- | ---------------- | ----------------- |
+| Total Requests    | 36,498       | 46,640           | 341,144          | **691,812**       |
+| Throughput        | 151.98 req/s | 195.2 req/s      | 1,265.7 req/s    | **2,748.5 req/s** |
+| Error Rate        | 0.00%        | 0.00%            | 0.01%            | **0.02%**         |
+| Avg Response Time | 1.17 s       | 913.68 ms        | 122.14 ms        | **54.13 ms**      |
+| P90 Response Time | 1.88 s       | 1.82 s           | 217.4 ms         | **110.76 ms**     |
+| P95 Response Time | 1.97 s       | 1.9 s            | 282 ms           | **131.98 ms**     |
+| P99 Response Time | 2.08 s       | 1.99 s           | 369.49 ms        | **183.07 ms**     |
+| Max Response Time | 3.35 s       | 3.07 s           | 924.68 ms        | **461.72 ms**     |
