@@ -5,6 +5,9 @@
 
 ### 시연영상
 
+배포 사이트: https://creatorhub.site
+- 프론트엔드는 React + Vite, TypeScript 기반으로 구현되었습니다.
+
 ### 주요기능
 #### 👨‍🎨 작가 기능
 - 작품 등록(작품 정보, 썸네일 이미지 업로드)
@@ -20,7 +23,7 @@
 - SQS + Lambda 비동기 이미지 리사이징
 - SSE 기반 이미지 처리 완료 알림
 
-#### 💳 결제 시스템
+#### 💳 결제 시스템(진행중)
 - Toss Payments 결제 연동
 - 결제 검증 및 코인 충전
 
@@ -31,7 +34,7 @@
 <br/>
 
 ## ☁️ 아키텍쳐 다이어그램
-<img src="./docs/images/total_architecture.png" width="800" alt="아키텍쳐" />
+<img src="./docs/images/total_architecture.png" alt="아키텍쳐" />
 
 <br/>
 
