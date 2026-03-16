@@ -3,9 +3,9 @@
 <br/>
 <br/>
 
-### 시연영상
+### 배포 사이트
 
-배포 사이트: https://creatorhub.site
+https://creatorhub.site
 - 프론트엔드는 React + Vite, TypeScript 기반으로 구현되었습니다.
 
 ### 주요기능
@@ -19,6 +19,7 @@
 - 관심 작품 등록 / 회차별 평점·좋아요 등록
 
 #### 🖼 작품 썸네일·원고 이미지 처리
+- CloudFront를 활용한 이미지 캐싱
 - S3 Presigned URL 기반 이미지 업로드
 - SQS + Lambda 비동기 이미지 리사이징
 - SSE 기반 이미지 처리 완료 알림
@@ -199,7 +200,7 @@ Dockerfile # 배포용 컨테이너 이미지 빌드용
 - Creation 테이블에 사전 집계 컬럼(totalViewCount 등) 도입
 - JPQL → Native Query 변경 및 JOIN 구조 개선
 - 쿼리 3회 호출 → 1회 조회로 통합
-- HikariCP 커넥션 풀 및Mysql DB 메모리 튜닝
+- HikariCP 커넥션 풀 및 Mysql DB 메모리 튜닝
 
 [💡자세한 성능 분석 과정(클릭)](docs/performance/creation-list-load-improvements.md)
 
