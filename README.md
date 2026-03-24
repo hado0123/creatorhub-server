@@ -31,7 +31,8 @@
 - Prometheus + Grafana(모니터링), k6(부하테스트)
 
 ### Frontend
-- 샘플 프론트엔드는 React, TypeScript 기반으로 구현하고, AI 를 활용해 프로토타이핑 및 반복 작업을 자동화했습니다.
+- 샘플 프론트엔드는 React, TypeScript 기반으로 구현
+- Claude AI를 활용해 프로토타이핑 및 반복 작업을 자동화
 
 <br/>
 
@@ -92,15 +93,15 @@ docker-compose*.yml
 
 - **문제:** 이미지 업로드/리사이징을 서버에서 직접 처리시 부하 증가
 - **해결:** S3 Presigned URL + Lambda 기반 비동기 처리로 서버 부하 감소
-
+<br/>
 
 - **문제:** Lambda 리사이징 실패시 재처리
 - **해결:** 실패된 Lambda 처리는 3회 재시도 후 실패시 메시지큐(SQS)로 이동 및 SNS로 slack 알람
-
+<br/>
 
 - **문제:** 업로드 후 첫 이미지 노출시 지연 문제
 - **해결:** CDN(CloudFront)을 사용해 지연 최소화
-
+<br/>
 
 - **문제:** 비동기 이미지 처리 완료 여부를 클라이언트가 확인하기 어려움 → Polling과 SSE 중 선택 필요
 - **해결:** 'Lambda → Backend Callback → SSE 알림' 구조 적용을 통해 불필요한 트래픽을 줄이고 클라이언트에서 코드 구현을 단순화
@@ -111,7 +112,7 @@ docker-compose*.yml
 
 - **문제:** 세션방식과 JWT 방식중 인증방식 선택 필요
 - **해결:** 차후 서버의 수평 확장시(Scale-out) 비용·지연 부담이 커져 JWT 방식 선택
-
+<br/>
 
 - **문제:** Refresh Token 저장소로 RDB 또는 Redis 중 선택 필요
 - **해결:** TTL 기반 자동 만료로 토큰 정리 작업을 최소화하기 위해 Redis 선택
