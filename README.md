@@ -43,6 +43,8 @@
 
 ## 🗄️ ERD
 [💡ERD 상세 보러가기](https://www.erdcloud.com/d/acRK6DAyfKdTHhQCe)
+<br/>
+
 <img src="./docs/images/creatorhub_erd.png" alt="erd" />
 
 <br/>
