@@ -1,6 +1,6 @@
-# 배포 과정
+# 🐳 Docker 기반 배포 가이드
 
-## 🐳 Docker Image Build & Push 전략
+## 📦 Docker Image Build & Push 전략
 
 ### 이미지 네이밍 규칙
 
