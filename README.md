@@ -42,7 +42,7 @@
 <br/>
 
 ## 🗄️ ERD
-[💡ERD 상세 보러가기](https://www.erdcloud.com/d/acRK6DAyfKdTHhQCe)
+✏️ [ERD 상세 보러가기](https://www.erdcloud.com/d/acRK6DAyfKdTHhQCe)
 <br/>
 
 <img src="./docs/images/creatorhub_erd.png" alt="erd" />
@@ -91,7 +91,7 @@ docker-compose*.yml
 ## ⭐ ISSUE 및 해결방법
 
 ### 1. 썸네일·원고 이미지 처리
-[💡이미지 처리 문제 해결 과정 상세보기](docs/architecture/creation-image-upload-resize.md)
+✏️ [이미지 처리 문제 해결 과정 상세보기](docs/architecture/creation-image-upload-resize.md)
 
 - **문제:** 이미지 업로드/리사이징을 서버에서 직접 처리시 부하 증가
 - **해결:** S3 Presigned URL + Lambda 기반 비동기 처리로 서버 부하 감소
@@ -110,7 +110,7 @@ docker-compose*.yml
 
 
 ### 2. JWT + Redis 기반 인증
-[💡인증시 문제 해결 과정 상세보기](docs/architecture/jwt_redis.md)
+✏️ [인증시 문제 해결 과정 상세보기](docs/architecture/jwt_redis.md)
 
 - **문제:** 세션방식과 JWT 방식중 인증방식 선택 필요
 - **해결:** 차후 서버의 수평 확장시(Scale-out) 비용·지연 부담이 커져 JWT 방식 선택
@@ -153,7 +153,7 @@ docker-compose*.yml
 - 쿼리 3회 호출 → 1회 조회로 통합
 - HikariCP 커넥션 풀, Mysql DB 메모리 튜닝
 
-[💡자세한 성능 분석 과정보기](docs/performance/creation-list-load-improvements.md)
+✏️ [자세한 성능 분석 과정보기](docs/performance/creation-list-load-improvements.md)
 
 ### 2. 특정 회차 웹툰 조회 API
 
@@ -169,22 +169,22 @@ docker-compose*.yml
 - 조회수 업데이트 로직은 비동기 처리로 분리
 - SUM(view_count) 집계 쿼리를 단순 증가(+1) 방식으로 변경
 
-[💡자세한 성능 분석 과정보기](docs/performance/episode-read-load-improvements.md)
+✏️ [자세한 성능 분석 과정보기](docs/performance/episode-read-load-improvements.md)
 
 <br/>
 
 ## ⚙️ 설계 규칙
 ### 1. DB / Entity 설계 정책
-[💡RDB 설계 원칙과 제약조건 상세보기](docs/db/schema-policy.md) <br/>
+✏️ [RDB 설계 원칙과 제약조건 상세보기](docs/db/schema-policy.md) <br/>
 - 도메인 식별자 및 사용자 액션(좋아요, 관심작품, 평점 등)은 DB `UNIQUE` 제약으로 중복을 차단하여 데이터 무결성과 멱등성 보장
 - Enum 값은 DB에 VARCHAR로 저장하여 코드 Enum 변경이 DB 마이그레이션으로 확장되는 것 방지
 - 썸네일 및 원고 이미지는 display_order로 관리하여 순서 충돌 및 중복 데이터 방지
 
-[💡Index 정책 상세보기](docs/db/index-design.md) <br/>
+✏️ [Index 정책 상세보기](docs/db/index-design.md) <br/>
 - 인덱스는 컬럼이 아닌 실제 조회 패턴(WHERE + ORDER BY)을 기준으로 설계
 - 정렬과 페이징 성능을 위해 복합 인덱스와 UNIQUE 제약을 활용하여 정렬 비용 최소화
 
-[💡Entity 정책 상세보기](docs/db/entity-relationship-policy.md) <br/>
+✏️ [Entity 정책 상세보기](docs/db/entity-relationship-policy.md) <br/>
 - JPA 연관관계는 **단방향 우선 전략**을 적용하고, 생명주기 관리가 필요한 경우에만 양방향 + cascade/orphanRemoval 사용
 
 ### 2. Spring Security 기반 인증 구조
