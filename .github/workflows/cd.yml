@@ -82,7 +82,7 @@ jobs:
 
             sudo docker pull $IMAGE_FULL_NAME
 
-            sed -i "s|IMAGE_FULL_NAME=.*|IMAGE_FULL_NAME=$IMAGE_FULL_NAME|g" .env || echo "IMAGE_FULL_NAME=$IMAGE_FULL_NAME" >> .env
+            echo "IMAGE_FULL_NAME=$IMAGE_FULL_NAME" >> .env
 
             sudo docker compose --env-file .env -f docker-compose.prod.yml down
             sudo docker compose --env-file .env -f docker-compose.prod.yml up -d
