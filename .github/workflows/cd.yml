@@ -74,15 +74,15 @@ jobs:
 
             echo "$PROD_ENV" > .env
 
-            docker login ghcr.io -u $GHCR_USERNAME -p $GHCR_TOKEN
+            sudo docker login ghcr.io -u $GHCR_USERNAME -p $GHCR_TOKEN
 
             export IMAGE_FULL_NAME=$IMAGE_NAME:$IMAGE_TAG
 
-            docker pull $IMAGE_FULL_NAME
+            sudo docker pull $IMAGE_FULL_NAME
 
             sed -i "s|IMAGE_FULL_NAME=.*|IMAGE_FULL_NAME=$IMAGE_FULL_NAME|g" .env || echo "IMAGE_FULL_NAME=$IMAGE_FULL_NAME" >> .env
 
-            docker compose --env-file .env -f docker-compose.prod.yml down
-            docker compose --env-file .env -f docker-compose.prod.yml up -d
+            sudo docker compose --env-file .env -f docker-compose.prod.yml down
+            sudo docker compose --env-file .env -f docker-compose.prod.yml up -d
 
-            docker image prune -af
+            sudo docker image prune -af
