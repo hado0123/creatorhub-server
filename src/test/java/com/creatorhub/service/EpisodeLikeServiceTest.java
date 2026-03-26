@@ -1,11 +1,13 @@
 package com.creatorhub.service;
 
 import com.creatorhub.dto.episode.like.EpisodeLikeResponse;
+import com.creatorhub.entity.Creation;
 import com.creatorhub.entity.Episode;
 import com.creatorhub.entity.EpisodeLike;
 import com.creatorhub.entity.Member;
 import com.creatorhub.exception.episode.EpisodeNotFoundException;
 import com.creatorhub.exception.member.MemberNotFoundException;
+import com.creatorhub.repository.CreationRepository;
 import com.creatorhub.repository.EpisodeLikeRepository;
 import com.creatorhub.repository.EpisodeRepository;
 import com.creatorhub.repository.MemberRepository;
@@ -27,6 +29,7 @@ class EpisodeLikeServiceTest {
     @Mock EpisodeLikeRepository episodeLikeRepository;
     @Mock EpisodeRepository episodeRepository;
     @Mock MemberRepository memberRepository;
+    @Mock CreationRepository creationRepository;
 
     @InjectMocks EpisodeLikeService episodeLikeService;
 
@@ -39,9 +42,15 @@ class EpisodeLikeServiceTest {
     void like_success() {
         long memberId = 1L;
         long episodeId = 10L;
+        long creationId = 100L;
+
+        Creation creation = mock(Creation.class);
+        given(creation.getId()).willReturn(creationId);
+        Episode episode = mock(Episode.class);
+        given(episode.getCreation()).willReturn(creation);
 
         given(memberRepository.findById(memberId)).willReturn(Optional.of(mock(Member.class)));
-        given(episodeRepository.findById(episodeId)).willReturn(Optional.of(mock(Episode.class)));
+        given(episodeRepository.findById(episodeId)).willReturn(Optional.of(episode));
         given(episodeLikeRepository.saveAndFlush(any(EpisodeLike.class))).willReturn(mock(EpisodeLike.class));
 
         EpisodeLikeResponse res = episodeLikeService.like(memberId, episodeId);
@@ -106,8 +115,15 @@ class EpisodeLikeServiceTest {
     void unlike_success() {
         long memberId = 1L;
         long episodeId = 10L;
+        long creationId = 100L;
+
+        Creation creation = mock(Creation.class);
+        given(creation.getId()).willReturn(creationId);
+        Episode episode = mock(Episode.class);
+        given(episode.getCreation()).willReturn(creation);
 
         given(episodeLikeRepository.deleteByMemberIdAndEpisodeId(memberId, episodeId)).willReturn(1);
+        given(episodeRepository.findById(episodeId)).willReturn(Optional.of(episode));
 
         EpisodeLikeResponse res = episodeLikeService.unlike(memberId, episodeId);
 
