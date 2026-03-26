@@ -2,9 +2,12 @@ version: "3.8"
 
 services:
   app:
-    image: ${IMAGE_FULL_NAME}
+#    image: 계정id/creatorhub-app:1.0
+    build: .
     container_name: creatorhub-app
-
+    depends_on:
+      - mysql
+      - redis
     environment:
       SPRING_PROFILES_ACTIVE: prod # application-prod.yml
       SPRING_SERVER_PORT: ${SPRING_SERVER_PORT}
@@ -26,3 +29,13 @@ services:
       - creatorhub-network
     restart: unless-stopped
 
+  frontend:
+#    image: docker계정id/creatorhub-frontend:1.0
+    container_name: creatorhub-frontend
+    ports:
+      - "80:80"
+    networks:
+      - creatorhub-network
+    depends_on:
+      - app
+    restart: unless-stopped

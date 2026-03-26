@@ -8,7 +8,6 @@ import com.creatorhub.entity.Member;
 import com.creatorhub.exception.episode.EpisodeNotFoundException;
 import com.creatorhub.exception.episode.rating.AlreadyEpisodeRatingException;
 import com.creatorhub.exception.member.MemberNotFoundException;
-import com.creatorhub.repository.CreationRepository;
 import com.creatorhub.repository.EpisodeRatingRepository;
 import com.creatorhub.repository.EpisodeRepository;
 import com.creatorhub.repository.MemberRepository;
@@ -32,7 +31,6 @@ class EpisodeRatingServiceTest {
     @Mock EpisodeRatingRepository episodeRatingRepository;
     @Mock EpisodeRepository episodeRepository;
     @Mock MemberRepository memberRepository;
-    @Mock CreationRepository creationRepository;
 
     @InjectMocks EpisodeRatingService episodeRatingService;
 
