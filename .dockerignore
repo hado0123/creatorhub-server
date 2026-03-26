@@ -4,6 +4,7 @@ mysql-data/*
 .git
 .gradle
 build
+!build/libs
 out
 *.log
 *.iml
