@@ -76,6 +76,8 @@ jobs:
 
             sudo docker login ghcr.io -u $GHCR_USERNAME -p $GHCR_TOKEN
 
+            sudo docker image prune -af
+
             export IMAGE_FULL_NAME=$IMAGE_NAME:$IMAGE_TAG
 
             sudo docker pull $IMAGE_FULL_NAME
@@ -84,5 +86,3 @@ jobs:
 
             sudo docker compose --env-file .env -f docker-compose.prod.yml down
             sudo docker compose --env-file .env -f docker-compose.prod.yml up -d
-
-            sudo docker image prune -af
