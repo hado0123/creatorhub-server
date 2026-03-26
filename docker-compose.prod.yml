@@ -26,3 +26,6 @@ services:
       - creatorhub-network
     restart: unless-stopped
 
+networks:
+  creatorhub-network:
+    external: true
