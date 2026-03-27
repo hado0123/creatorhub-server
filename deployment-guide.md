@@ -85,11 +85,7 @@ EC2 서버에 아래 파일을 준비한다.
 
 ### 4. docker-compose.prod.yml 수정
 
-운영 서버에서는 **build 옵션을 제거**한다.
-
-👉 이미 Docker Hub에 빌드된 이미지를 사용하기 때문  
 👉 `image`가 있어야 자동 pull이 동작한다(반드시 추가) <br/>
-👉 백엔드,프론트엔드 각각 image명 지정
 
 ### 예시
 
@@ -98,10 +94,6 @@ services:
   app:
     image: docker계정id/creatorhub-app:1.0 ✔️추가(백엔드)
     container_name: creatorhub-app
-    ...
-  frontend:
-    image: docker계정id/creatorhub-frontend:1.0 ✔️추가(프론트엔드)
-    container_name: creatorhub-frontend
     ...
 ```
 
