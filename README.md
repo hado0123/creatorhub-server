@@ -33,7 +33,7 @@
 
 ### Frontend
 - React, TypeScript, Axios, Tailwind CSS
-- Claude AI를 활용해 프로토타이핑 및 반복 작업을 자동화
+- Claude AI를 활용한 프로토타이핑 및 반복 작업 자동화
 
 <br/>
 
