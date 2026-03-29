@@ -27,11 +27,12 @@
 
 ### Infra
 - AWS (S3, Lambda, SQS, SNS, CloudFront)
-- Github Actions (CI/CD), Docker Compose (배포, 실행)
+- Github Actions (CI/CD)
+- Docker Compose (배포, 실행)
 - Prometheus + Grafana(모니터링), k6(부하테스트)
 
 ### Frontend
-- 샘플 프론트엔드는 React, TypeScript 기반으로 구현
+- React, TypeScript, Axios, Tailwind CSS
 - Claude AI를 활용해 프로토타이핑 및 반복 작업을 자동화
 
 <br/>
