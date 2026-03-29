@@ -10,9 +10,9 @@
 - 작품 등록 / 회차 등록
 
 #### 📚 독자 기능
-- Cursor 방식의 요일별 작품 조회(인기순·조회수·별점순)
+- Cursor 방식의 요일별 작품 조회(인기순, 조회수, 별점순)
 - 작품 및 회차 상세 조회
-- 관심 작품 등록 / 회차별 평점·좋아요 등록
+- 관심 작품 등록 / 회차별 평점, 좋아요 등록
 
 #### 💳 결제 시스템(진행중)
 - Toss Payments 결제 및 코인 충전
@@ -27,7 +27,7 @@
 
 ### Infra
 - AWS (S3, Lambda, SQS, SNS, CloudFront)
-- Docker Compose (배포·실행)
+- Github Actions (CI/CD), Docker Compose (배포, 실행)
 - Prometheus + Grafana(모니터링), k6(부하테스트)
 
 ### Frontend
@@ -90,11 +90,11 @@ docker-compose*.yml
 
 ## ⭐ ISSUE 및 해결방법
 
-### 1. 썸네일·원고 이미지 처리
+### 1. 썸네일/원고 이미지 처리
 ✏️ [이미지 처리 문제 해결 과정 상세보기](docs/architecture/creation-image-upload-resize.md)
 
 - **문제:** 이미지 업로드/리사이징을 서버에서 직접 처리시 부하 증가
-- **해결:** S3 Presigned URL + Lambda 기반 비동기 처리로 서버 부하 감소
+- **해결:** 'S3 Presigned URL + Lambda' 기반 비동기 처리로 서버 부하 감소
 <br/>
 
 - **문제:** Lambda 리사이징 실패시 재처리
@@ -102,7 +102,7 @@ docker-compose*.yml
 <br/>
 
 - **문제:** 업로드 후 첫 이미지 노출시 지연 문제
-- **해결:** CDN(CloudFront)을 사용해 지연 최소화
+- **해결:** 'CDN(CloudFront)'을 사용해 지연 최소화
 <br/>
 
 - **문제:** 비동기 이미지 처리 완료 여부를 클라이언트가 확인하기 어려움 → Polling과 SSE 중 선택 필요
@@ -113,16 +113,16 @@ docker-compose*.yml
 ✏️ [인증시 문제 해결 과정 상세보기](docs/architecture/jwt_redis.md)
 
 - **문제:** 세션방식과 JWT 방식중 인증방식 선택 필요
-- **해결:** 차후 서버의 수평 확장시(Scale-out) 비용·지연 부담이 커져 JWT 방식 선택
+- **해결:** 차후 서버의 수평 확장시(Scale-out) 비용, 지연 부담이 커져 'JWT 방식' 선택
 <br/>
 
 - **문제:** Refresh Token 저장소로 RDB 또는 Redis 중 선택 필요
-- **해결:** TTL 기반 자동 만료로 토큰 정리 작업을 최소화하기 위해 Redis 선택
+- **해결:** TTL 기반 자동 만료로 토큰 정리 작업을 최소화하기 위해 'Redis' 선택
 
 
 ### 3. 요일별 웹툰 조회시 페이징 처리
-- **문제:** Offset 기반 페이징은 데이터 증가 시 성능 저하 발생
-- **해결:** 'Cursor 기반 페이징' 적용
+- **문제:** Offset 페이징은 데이터 증가 시 성능 저하 발생
+- **해결:** 'Cursor 페이징' 적용
 
 ### 4. 데이터 무결성 처리
 - **문제:** 관심작품, 좋아요 등 사용자의 사용 실수로 동시 요청시 중복데이터 발생 가능
@@ -130,13 +130,13 @@ docker-compose*.yml
 
 ### 5. DB 스키마 관리
 - **문제:** DB 스키마 변경 이력 관리 필요
-- **해결:** 버전 기반 스키마 관리 및 환경 간 DB 불일치 방지를 위해 Flyway 사용
+- **해결:** 버전 기반 스키마 관리 및 환경 간 DB 불일치 방지를 위해 'Flyway' 사용
 
 <br/>
 
 ## ⭐ 성능 테스트 및 개선
 - Prometheus, Grafana를 통한 모니터링 환경 구현 + k6 부하 테스트
-- Creations(작품): 7,000건, Episodes(회차): 518,146건
+- Creations(작품): 7,000건 / Episodes(회차): 518,146건
 
 ### 1. 요일별 웹툰 조회 API
 
