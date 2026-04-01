@@ -192,14 +192,14 @@ docker-compose*.yml
 - JPA 연관관계는 단방향 우선 전략을 적용하고, 생명주기 관리가 필요한 경우에만 '양방향 + cascade/orphanRemoval' 사용
 
 ### 2. 인증 정책
-- **Spring Security 기반 인증 구조:** JWT 인증 + Role 기반 인증
-- **Lambda 콜백 HMAC 인증:** Lambda 이미지 리사이징 완료시 백엔드 콜백 요청에 대해 HMAC 인증 적용 → 외부 요청 위변조 방지
+- Spring Security 기반 인증 구조: JWT 인증 + Role 기반 인증
+- Lambda 콜백 HMAC 인증: Lambda 이미지 리사이징 완료시 백엔드 콜백 요청에 대해 HMAC 인증 적용 → 외부 요청 위변조 방지
 
 <br/>
 
 ## 🐳 Docker 기반 실행 및 CI/CD 배포
 
-- **Docker Compose로 실행되는 컨테이너:** MySQL, Redis, Spring Boot 앱(creatorhub-server), Prometheus, Grafana
+- Docker Compose로 실행되는 컨테이너: MySQL, Redis, Spring Boot 앱(creatorhub-server), Prometheus, Grafana
 - 모든 민감한 설정 값은 실행 시 환경변수(.env)로 주입
 - GitHub Actions를 통해 자동화된 Docker 이미지 빌드 및 배포 진행(CI/CD)
   - main 브랜치에 PR merge → Docker 이미지 생성 → GHCR에 이미지 업로드 → EC2 자동 배포
