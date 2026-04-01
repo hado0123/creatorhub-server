@@ -195,10 +195,10 @@ docker-compose*.yml
 
 ## 🐳 Docker 기반 실행 및 CI/CD 배포
 
-- MySQL DB, Redis, Spring Boot 앱(creatorhub-server), prometheus, grafana를 Docker Compose를 통해 실행합니다.
-- 모든 민감한 설정 값은 실행 시 환경변수(.env)로 주입합니다.
-- GitHub Actions을 통해 자동화된 Docker 이미지 빌드 및 배포가 진행됩니다(CI/CD) 
-  - main 브랜치에 PR merge → Cretorhub 앱 빌드 & 이미지 생성 → Docker 이미지 GHCR 업로드 → EC2 서버에 자동 배포
+- Docker Compose로 실행되는 컨테이너: MySQL, Redis, Spring Boot 앱(creatorhub-server), Prometheus, Grafana
+- 모든 민감한 설정 값은 실행 시 환경변수(.env)로 주입
+- GitHub Actions를 통해 자동화된 Docker 이미지 빌드 및 배포 진행(CI/CD)
+  - main 브랜치에 PR merge → Docker 이미지 생성 → GHCR에 이미지 업로드 → EC2 자동 배포
 
 💡[개발 실행 가이드 보기](getting-started.md)
 <br/>
