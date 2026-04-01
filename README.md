@@ -93,12 +93,15 @@ docker-compose*.yml
 ### 1. 썸네일/원고 이미지 처리
 ✏️ [이미지 처리 문제 해결 과정 상세보기](docs/architecture/creation-image-upload-resize.md)
 
-- **문제:** 이미지 업로드 및 리사이징을 서버에서 직접 처리시 부하 증가
+- **문제:** 이미지 업로드, 리사이징을 서버에서 직접 처리시 부하 증가
 - **해결:** S3 + Presigned URL를 사용한 프론트엔드에서 업로드, Lambda 이미지 리사이징 적용으로 서버 가용성 확보
 <br/>
 
 - **문제:** Lambda 리사이징 실패시 재처리
-- **해결:** 실패된 Lambda 처리는 3회 재시도 후 실패시 메시지큐(SQS)로 이동, 이후 SNS로 slack 알람
+- **해결:** 
+  - 메세지큐(SQS)를 적용해 Lambda 작업 큐와 실패된 작업이 저장되는 큐(DLQ)를 각각 만듬 
+  - 작업 큐를 이용해 3번 재시도 후 실패 시에서는 DLQ로 이동, 이후 SNS로 slack 알람
+  
 <br/>
 
 - **문제:** 업로드 후 이미지 첫 노출시 지연 문제
@@ -106,7 +109,9 @@ docker-compose*.yml
 <br/>
 
 - **문제:** 비동기 이미지 처리 완료 여부를 클라이언트가 확인하기 어려움 → Polling과 SSE 중 선택 필요
-- **해결:** Lambda → Backend Callback → SSE 알림 구조 적용을 통해 불필요한 트래픽을 줄이고 클라이언트에서 코드 구현을 단순화
+- **해결:** 
+  - Lambda → Backend Callback → SSE 알림 구조 적용을 통해 불필요한 트래픽을 줄임
+  - Polling의 interval, 재시도, 타임아웃 관리 등의 로직을 제거해 클라이언트 코드 구현 단순화 가능
 
 
 ### 2. JWT + Redis 기반 인증
@@ -130,7 +135,7 @@ docker-compose*.yml
 
 ### 5. DB 스키마 관리
 - **문제:** DB 스키마 변경 이력 관리 필요
-- **해결:** 버전 기반 스키마 관리 및 환경 간 DB 불일치 방지를 위해 Flyway 사용
+- **해결:** 버전 기반 스키마 관리, 환경 간 DB 불일치 방지를 위해 Flyway 사용
 
 <br/>
 
@@ -166,7 +171,7 @@ docker-compose*.yml
 | P95 Latency  | 1.97 s    | **131.98ms (93% 빨라짐)**    |
 
 #### 핵심 개선 포인트
-- 조회수 증가 시 Redis에 집계 후 10초 주기 배치로 DB에 반영하여 업데이트 Lock 경쟁 제거
+- 조회수 증가 시 Redis에 집계 후, 10초 주기 배치로 DB에 반영하여 UPDATE Lock 경쟁 제거
 - Caffeine 캐시 적용 및 캐시 스탬피드 완화(회차 데이터는 변경 빈도가 낮음)
 - SUM(view_count) 집계 쿼리를 단순 증가(+1) 방식으로 변경
 
@@ -176,7 +181,7 @@ docker-compose*.yml
 ### 1. DB / Entity 설계 정책
 ✏️ [RDB 설계 원칙과 제약조건 상세보기](docs/db/schema-policy.md) <br/>
 - 도메인 식별자 및 사용자 액션(좋아요, 관심작품, 평점 등)은 DB `UNIQUE` 제약으로 데이터 무결성과 멱등성 보장
-- Enum 값은 DB에 VARCHAR로 저장하여 코드 Enum 변경이 DB 마이그레이션으로 확장되는 것 방지
+- Enum 값은 DB에 `VARCHAR`로 저장하여 코드 Enum 변경이 DB 마이그레이션으로 확장되는 것 방지
 - 썸네일 및 원고 이미지는 display_order로 관리하여 순서 충돌 및 중복 데이터 방지
 
 ✏️ [Index 정책 상세보기](docs/db/index-design.md) <br/>
@@ -184,18 +189,17 @@ docker-compose*.yml
 - 정렬과 페이징 성능을 위해 복합 인덱스와 UNIQUE 제약을 활용하여 정렬 비용 최소화
 
 ✏️ [Entity 정책 상세보기](docs/db/entity-relationship-policy.md) <br/>
-- JPA 연관관계는 **단방향 우선 전략**을 적용하고, 생명주기 관리가 필요한 경우에만 양방향 + cascade/orphanRemoval 사용
+- JPA 연관관계는 단방향 우선 전략을 적용하고, 생명주기 관리가 필요한 경우에만 '양방향 + cascade/orphanRemoval' 사용
 
-### 2. Spring Security 기반 인증 구조
-- JWT 인증 + Role 기반 인증
-### 3. Lambda Callback HMAC 검증
-- Lambda 이미지 리사이징 완료시 백엔드 콜백 요청에 대해 HMAC 검증 적용 → 외부 요청 위변조 방지
+### 2. 인증 정책
+- **Spring Security 기반 인증 구조:** JWT 인증 + Role 기반 인증
+- **Lambda 콜백 HMAC 인증:** Lambda 이미지 리사이징 완료시 백엔드 콜백 요청에 대해 HMAC 인증 적용 → 외부 요청 위변조 방지
 
 <br/>
 
 ## 🐳 Docker 기반 실행 및 CI/CD 배포
 
-- Docker Compose로 실행되는 컨테이너: MySQL, Redis, Spring Boot 앱(creatorhub-server), Prometheus, Grafana
+- **Docker Compose로 실행되는 컨테이너:** MySQL, Redis, Spring Boot 앱(creatorhub-server), Prometheus, Grafana
 - 모든 민감한 설정 값은 실행 시 환경변수(.env)로 주입
 - GitHub Actions를 통해 자동화된 Docker 이미지 빌드 및 배포 진행(CI/CD)
   - main 브랜치에 PR merge → Docker 이미지 생성 → GHCR에 이미지 업로드 → EC2 자동 배포
