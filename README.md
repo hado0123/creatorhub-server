@@ -94,7 +94,7 @@ docker-compose*.yml
 ✏️ [이미지 처리 문제 해결 과정 상세보기](docs/architecture/creation-image-upload-resize.md)
 
 - **문제:** 이미지 업로드 및 리사이징을 서버에서 직접 처리시 부하 증가
-- **해결:** S3 Presigned URL + Lambda 기반 비동기 처리로 서버 가용성 확보
+- **해결:** S3 + Presigned URL를 사용한 프론트엔드에서 업로드, Lambda 이미지 리사이징 적용으로 서버 가용성 확보
 <br/>
 
 - **문제:** Lambda 리사이징 실패시 재처리
